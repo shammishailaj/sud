@@ -9,6 +9,7 @@ import (
 func (server *Server) addColumn(tx IQuery, info *PoleTableInfo) error {
 	var err error
 	PoleDBType := ""
+	var Q2 string = ""
 	switch info.PoleInfo.GetPoleType() {
 	case "StringValue":
 		PoleDBType = `text NULL`
@@ -24,6 +25,7 @@ func (server *Server) addColumn(tx IQuery, info *PoleTableInfo) error {
 		break
 	case "DocumentLinkValue":
 		PoleDBType = `uuid NULL`
+		Q2 = `ALTER TABLE "` + info.TableName + `" ADD CONSTRAINT "` + info.TableName + `_fk_` + info.PoleName + `" FOREIGN KEY (t) REFERENCES public."Document" ("__DocumentUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;`
 		break
 	default:
 		return errors.New("pole type error")
@@ -32,13 +34,19 @@ func (server *Server) addColumn(tx IQuery, info *PoleTableInfo) error {
 		fmt.Println(err)
 		return err
 	}
+	if Q2 != "" {
+		if _, err = tx.Exec(Q2); err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
 	if info.PoleInfo.GetIndexType() == "Unique" {
-		if _, err = tx.Exec(`CREATE UNIQUE INDEX "UIndex_` + info.TableName + ` ON "` + info.TableName + `" ("` + info.PoleName + `" ASC NULLS LAST)`); err != nil {
+		if _, err = tx.Exec(`CREATE UNIQUE INDEX "UIndex_` + info.TableName + `" ON "` + info.TableName + `" ("` + info.PoleName + `" ASC NULLS LAST)`); err != nil {
 			return err
 		}
 	}
 	if info.PoleInfo.GetIndexType() == "Index" {
-		if _, err = tx.Exec(`CREATE INDEX "UIndex_` + info.TableName + ` ON "` + info.TableName + `" ("` + info.PoleName + `" ASC NULLS LAST)`); err != nil {
+		if _, err = tx.Exec(`CREATE INDEX "UIndex_` + info.TableName + `" ON "` + info.TableName + `" ("` + info.PoleName + `" ASC NULLS LAST)`); err != nil {
 			return err
 		}
 	}
@@ -75,7 +83,7 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 	Tables := map[string]map[string]string{}
 	var rows1, rows2 *sql.Rows
 
-	if rows1, err = tx.Query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA=$1`, server.databaseName); err != nil {
+	if rows1, err = tx.Query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA='public'`); err != nil {
 		return err
 	}
 	defer rows1.Close()
@@ -86,7 +94,7 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 		}
 		Tables[TABLE_NAME] = map[string]string{}
 	}
-	if rows2, err = tx.Query("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=$1", server.databaseName); err != nil {
+	if rows2, err = tx.Query("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='public'"); err != nil {
 		return err
 	}
 	defer rows2.Close()
@@ -100,7 +108,7 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 	for TableName, ti := range TablePoles {
 		var poles map[string]string
 		if poles, ok = Tables[TableName]; !ok {
-			if _, err = tx.Exec(`CREATE TABLE "` + TableName + `" ( "__DocumentUID" uuid NOT NULL, CONSTRAINT "` + TableName + `_pk_document" PRIMARY KEY ("__DocumentUID"))`); err != nil {
+			if _, err = tx.Exec(`CREATE TABLE "` + TableName + `" ( "__DocumentUID" uuid NOT NULL, CONSTRAINT "` + TableName + `_pk_document" PRIMARY KEY ("__DocumentUID"),   CONSTRAINT "` + TableName + `_fk_document" FOREIGN KEY ("__DocumentUID") REFERENCES "Document" ("__DocumentUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION)`); err != nil {
 				return err
 			}
 			poles = map[string]string{}

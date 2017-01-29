@@ -73,8 +73,8 @@ type configuration struct {
 	dependConfigurationName []string
 }
 
-func (conf *configuration) getPoleInfo(DucumentType string, PoleName string) (IPoleInfo, error) {
-	if m, ok := conf.polesInfo[DucumentType]; ok {
+func (conf *configuration) getPoleInfo(DocumentType string, PoleName string) (IPoleInfo, error) {
+	if m, ok := conf.polesInfo[DocumentType]; ok {
 		if pi, ok := m[PoleName]; ok {
 			return pi, nil
 		}

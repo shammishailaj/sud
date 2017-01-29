@@ -53,7 +53,13 @@ func main() {
 		fmt.Println(err)
 	}
 	defer server.RollbackTransaction(tid)
-	server.CheckConfiguration(tid, "Configuration")
+	fmt.Println(server.CheckConfiguration(tid, "Configuration"))
+	fmt.Println(server.CheckConfiguration(tid, "Document"))
+
+	doc, err := server.NewDocument(tid, "Document", "Document")
+	fmt.Println(doc.SetPoleValue("Document.DocumentType", "Q1"))
+	fmt.Println(server.SaveDocument(tid, doc))
+	//server.GetDocuments(tid, "Document", "Test", []string{"Document.*"}, []storage.IDocumentWhere{})
 	server.CommitTransaction(tid)
 	fmt.Println("end")
 	/*c, _ := storage.Connect("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable")

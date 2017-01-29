@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -12,23 +14,23 @@ type PoleCheckerStringValue struct {
 	MaxLenValue int64
 }
 
-func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value Object) bool {
+func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value Object) error {
 	if pcsv.AllowNull && Value.IsNull() {
-		return true
+		return nil
 	}
 	if Value.Type() != "String" {
-		return false
+		return errors.New("Value type not string")
 	}
 	if len(pcsv.List) > 0 {
 		if v, err := Value.String(); err == nil {
 			if _, ok := pcsv.List[v]; !ok {
-				return false
+				return errors.New("Value " + v + "  note contain list " + fmt.Sprintln(pcsv.List))
 			}
 		} else {
-			return false
+			return err
 		}
 	}
-	return true
+	return nil
 }
 func (pcsv *PoleCheckerStringValue) Load(doc IDocument) {
 	if !doc.GetPole("Configuration.PoleInfo.CheckerStringValueAllowNull").IsNull() {
@@ -54,24 +56,23 @@ type PoleCheckerInt64Value struct {
 	AllowNull bool
 }
 
-func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value Object) bool {
+func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value Object) error {
 	v, err := Value.Int64()
 	if err != nil {
-		return false
+		return errors.New("Value type not int64")
 	}
 	if len(pciv.List) > 0 {
 		if _, ok := pciv.List[v]; !ok {
-			return false
+			return errors.New(fmt.Sprintln("Value ", v, "  note contain list ", pciv.List))
 		}
 	}
 	if pciv.Min && v < pciv.MinValue {
-		return false
+		return errors.New(fmt.Sprintln("min", v, "<", pciv.MinValue))
 	}
 	if pciv.Max && v > pciv.MaxValue {
-		return false
+		return errors.New(fmt.Sprintln("max", v, "<", pciv.MaxValue))
 	}
-	return true
-
+	return nil
 }
 func (pciv *PoleCheckerInt64Value) Load(doc IDocument) {
 	if v, err := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMin").Int64(); err != nil {

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"database/sql/driver"
 	"errors"
 	"time"
 )
@@ -10,6 +11,38 @@ type Object struct {
 	currentType string
 }
 
+func (o Object) Value() (driver.Value, error) {
+	/*if o == nil {
+		return nil, nil
+	}*/
+	switch o.currentType {
+	case "":
+		return nil, nil
+	case "String":
+		return o.value.(string), nil
+	case "Int64":
+		return o.value.(int64), nil
+	case "Boolean":
+		return o.value.(bool), nil
+	case "Date":
+		return o.value.(time.Time).Format("2006-01-02"), nil
+	case "DateTime":
+		return o.value.(time.Time), nil
+	case "DocumentLink":
+		return o.value.(UUID).String(), nil
+	}
+	return nil, errors.New("Object to database type error")
+}
+func (o *Object) Scan(value interface{}) error {
+	return errors.New("Database to Object type error")
+	/*	bytes, ok := value.([]byte)
+		if ok && len(bytes) == 16 {
+			*u = bytes
+			return nil
+		}
+		return errors.New("convert error UUID")*/
+
+}
 func NewObject(value interface{}) Object {
 	o := Object{}
 	o.Set(value)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -13,18 +14,41 @@ type document struct {
 	documentType   string
 	readOnly       bool
 	deleteDocument bool
+	editpoles      map[string]bool
 	poles          map[string]Object
 }
 
-func (doc *document) GetDocumentUID() UUID                { return doc.documentUID }
-func (doc *document) GetDocumentType() string             { return doc.documentType }
-func (doc *document) GetReadOnly() bool                   { return doc.readOnly }
-func (doc *document) GetDeleteDocument() bool             { return doc.deleteDocument }
-func (doc *document) GetPole(name string) Object          { return doc.poles[name] }
+func (doc *document) GetDocumentUID() UUID       { return doc.documentUID }
+func (doc *document) GetDocumentType() string    { return doc.documentType }
+func (doc *document) GetReadOnly() bool          { return doc.readOnly }
+func (doc *document) GetDeleteDocument() bool    { return doc.deleteDocument }
+func (doc *document) GetPole(name string) Object { return doc.poles[name] }
+func (doc *document) GetPoleValue(name string) interface{} {
+	obj := doc.poles[name]
+	return (&obj).Get()
+}
 func (doc *document) SetDocumentType(documenttype string) { doc.documentType = documenttype }
 func (doc *document) SetReadOnly(readonly bool)           { doc.readOnly = readonly }
 func (doc *document) SetDeleteDocument(delete bool)       { doc.deleteDocument = delete }
-func (doc *document) SetPole(name string, value Object)   { doc.poles[name] = value }
+func (doc *document) SetPoleValue(name string, value interface{}) error {
+	return doc.SetPole(name, NewObject(value))
+}
+func (doc *document) SetPole(name string, value Object) error {
+	var err error
+	info, err := doc.configuration.getPoleInfo(doc.documentType, name)
+	if err != nil {
+		return err
+	}
+	checker := info.GetChecker()
+	if checker != nil {
+		if err = checker.CheckPoleValue(value); err != nil {
+			return err
+		}
+	}
+	doc.editpoles[name] = true
+	doc.poles[name] = value
+	return nil
+}
 func (doc *document) GetPoleNames() []string {
 	poles := make([]string, len(doc.poles))
 	n := 0
@@ -35,8 +59,24 @@ func (doc *document) GetPoleNames() []string {
 	return poles
 }
 func (doc *document) GetConfiguration() *configuration { return doc.configuration }
-func NewDocument(configuration *configuration, DocumentType string) *document {
-	return &document{configuration: configuration, poles: map[string]Object{}}
+func (server *Server) NewDocument(TransactionUID string, ConfigurationName string, DocumentType string) (*document, error) {
+	var err error
+	var tx *transaction
+	var config *configuration
+	if tx, err = server.getTransaction(TransactionUID); err != nil {
+		return nil, err
+	}
+	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+		return nil, err
+	}
+	doc := &document{configuration: config, documentType: DocumentType, poles: map[string]Object{}, editpoles: map[string]bool{}}
+	doc.documentUID = NewUUID()
+	_, err = tx.Exec(`INSERT INTO "Document"("__DocumentUID", "DocumentType", "Readonly", "DeleteDocument") VALUES ($1,$2,$3,$4)`, doc.documentUID, DocumentType, false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return doc, nil
 }
 
 /*
@@ -184,13 +224,13 @@ func (server *Server) GetDocuments(TransactionUID string, ConfigurationName stri
 	}
 	var DocumentUID []byte
 	state := NewQueryState()
-	state.AddPoleSQL("[dbo].[Document].[__DocumentUID]", &DocumentUID)
+	state.AddPoleSQL(`"Document"."__DocumentUID"`, &DocumentUID)
 	for poleName, pi := range config.getPolesInfo(DocumentType, poles) {
 		state.AddPole(poleName, pi)
 	}
 	var SQLTop string
 	SQLPoles := state.GenSQLPoles()
-	SQLTables := state.GenSQLTables("[dbo].[Document]")
+	SQLTables := state.GenSQLTables(`"Document"`)
 	if SQLTop, err = state.GenSQLTop(); err != nil {
 		return nil, err
 	}
@@ -209,7 +249,7 @@ func (server *Server) GetDocuments(TransactionUID string, ConfigurationName stri
 		if err = rows.Scan(values...); err != nil {
 			return nil, err
 		}
-		doc := NewDocument(config, DocumentType)
+		doc := &document{configuration: config, documentType: DocumentType, poles: map[string]Object{}, editpoles: map[string]bool{}}
 		doc.documentUID = UUID(DocumentUID[0:16])
 		state.SetDocumentPoles(doc, values)
 		documents = append(documents, doc)
@@ -217,4 +257,50 @@ func (server *Server) GetDocuments(TransactionUID string, ConfigurationName stri
 	//e, _ := rows.Columns()
 	//fmt.Println(SQL, e)
 	return documents, nil
+}
+
+func (server *Server) SaveDocument(TransactionUID string, doc *document) error {
+	var err error
+	var ok bool
+	var pi IPoleInfo
+	var tl []*PoleTableInfo
+	var tx *transaction
+	if tx, err = server.getTransaction(TransactionUID); err != nil {
+		return err
+	}
+	TablePole := map[string][]*PoleTableInfo{}
+	for pole := range doc.editpoles {
+		if pi, err = doc.configuration.getPoleInfo(doc.documentType, pole); err != nil {
+			return err
+		}
+		pti := &PoleTableInfo{}
+		pti.FromPoleInfo(pi)
+		if tl, ok = TablePole[pti.TableName]; !ok {
+			tl = []*PoleTableInfo{}
+			TablePole[pti.TableName] = tl
+		}
+		TablePole[pti.TableName] = append(tl, pti)
+	}
+	for tableName, tl := range TablePole {
+		var count int
+		tx.QueryRow(`SELECT COUNT(*) FROM "`+tableName+`" WHERE "__DocumentUID"=$1`, doc.documentUID).Scan(&count)
+		if count == 0 {
+			if _, err = tx.Exec(`INSERT INTO "`+tableName+`"("__DocumentUID") VALUES ($1)`, doc.documentUID); err != nil {
+				return err
+			}
+		}
+		num := len(tl)
+		poles := make([]string, num, num)
+		values := make([]interface{}, num+1, num+1)
+		for i := 0; i < num; i++ {
+			poles[i] = `"` + tl[i].PoleName + `"= $` + strconv.Itoa(i+1)
+			values[i] = doc.poles[tl[i].PoleInfo.GetPoleName()]
+		}
+		values[num] = doc.documentUID
+		if _, err = tx.Exec(`UPDATE "`+tableName+`" SET `+strings.Join(poles, ", ")+` WHERE "__DocumentUID"=$`+strconv.Itoa(num+1), values...); err != nil {
+			return err
+		}
+
+	}
+	return nil
 }
