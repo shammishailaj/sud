@@ -1,13 +1,17 @@
 package core
 
+import (
+	"errors"
+)
+
 type DocumentWhereContainPole struct {
 	PoleName string
 }
 
 func (dw *DocumentWhereContainPole) Load(doc IDocument) error {
-	var err error
-	if dw.PoleName, err = doc.GetPole("DocumentWhere.ContainPole.PoleName").String(); err != nil {
-		return err
+	var ok bool
+	if dw.PoleName, ok = doc.GetPole("DocumentWhere.ContainPole.PoleName").(string); !ok {
+		return errors.New("not found DocumentWhere.ContainPole.PoleName")
 	}
 	return nil
 }
@@ -19,18 +23,14 @@ type DocumentWhereNotContainPole struct {
 }
 
 func (dw *DocumentWhereNotContainPole) Load(doc IDocument) error {
-	var err error
-	if dw.PoleName, err = doc.GetPole("DocumentWhere.NotContainPole.PoleName").String(); err != nil {
-		return err
+	var ok bool
+	if dw.PoleName, ok = doc.GetPole("DocumentWhere.NotContainPole.PoleName").(string); !ok {
+		return errors.New("not found DocumentWhere.NotContainPole.PoleName")
 	}
-	if dw.InTableName, err = doc.GetPole("DocumentWhere.NotContainPole.InTableName").String(); err != nil {
-		return err
+	if dw.InTableName, ok = doc.GetPole("DocumentWhere.NotContainPole.InTableName").(string); !ok {
+		return errors.New("not found DocumentWhere.NotContainPole.InTableName")
 	}
-	if doc.GetPole("DocumentWhere.NotContainPole.TabLock").IsNull() {
-		if dw.TabLock, err = doc.GetPole("DocumentWhere.NotContainPole.TabLock").Boolean(); err != nil {
-			return err
-		}
-	} else {
+	if dw.TabLock, ok = doc.GetPole("DocumentWhere.NotContainPole.TabLock").(bool); !ok {
 		dw.TabLock = false
 	}
 	return nil
@@ -42,13 +42,8 @@ type DocumentWhereLimit struct {
 }
 
 func (dw *DocumentWhereLimit) Load(doc IDocument) error {
-	var err error
-	if dw.Skip, err = doc.GetPole("DocumentWhere.Limit.Skip").Int64(); err != nil {
-		return err
-	}
-	if dw.Count, err = doc.GetPole("DocumentWhere.Limit.Count").Int64(); err != nil {
-		return err
-	}
+	dw.Skip = doc.GetPole("DocumentWhere.Limit.Skip").(int64)
+	dw.Count = doc.GetPole("DocumentWhere.Limit.Count").(int64)
 	return nil
 }
 
@@ -58,14 +53,13 @@ type DocumentWhereOrder struct {
 }
 
 func (dw *DocumentWhereOrder) Load(doc IDocument) error {
-	var err error
-	if dw.PoleName, err = doc.GetPole("DocumentWhere.Order.PoleName").String(); err != nil {
-		return err
+	var ok bool
+	if dw.PoleName, ok = doc.GetPole("DocumentWhere.Order.PoleName").(string); !ok {
+		return errors.New("not found DocumentWhere.Order.PoleName")
 	}
 	var ASC string
-	if ASC, err = doc.GetPole("DocumentWhere.Order.ASC").String(); err != nil {
+	if ASC, ok = doc.GetPole("DocumentWhere.Order.ASC").(string); ok {
 		dw.ASC = ASC == "ASC"
-		return err
 	}
 	return nil
 }
@@ -75,9 +69,12 @@ type DocumentWhereSelectDocument struct {
 }
 
 func (dw *DocumentWhereSelectDocument) Load(doc IDocument) error {
-	var err error
-	if dw.DocumentUID, err = doc.GetPole("DocumentWhere.SelectDocument.DocumentUID").DocumentLink(); err != nil {
-		return err
+	var ok bool
+	var UID string
+	if UID, ok = doc.GetPole("DocumentWhere.Order.ASC").(string); ok {
+		if err := dw.DocumentUID.Scan(UID); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -91,12 +88,12 @@ type DocumentWhereCompare struct {
 }
 
 func (dw *DocumentWhereCompare) Load(doc IDocument) error {
-	var err error
-	if dw.PoleName, err = doc.GetPole("DocumentWhere.Compare.PoleName").String(); err != nil {
-		return err
+	var ok bool
+	if dw.PoleName, ok = doc.GetPole("DocumentWhere.Compare.PoleName").(string); !ok {
+		return errors.New("not found DocumentWhere.Compare.PoleName")
 	}
-	if dw.Operation, err = doc.GetPole("DocumentWhere.Compare.Operation").String(); err != nil {
-		return err
+	if dw.Operation, ok = doc.GetPole("DocumentWhere.Compare.Operation").(string); !ok {
+		return errors.New("not found DocumentWhere.Compare.Operation")
 	}
 	poles := map[string]bool{
 		"DocumentWhere.Compare.StringValue":       true,
@@ -111,10 +108,8 @@ func (dw *DocumentWhereCompare) Load(doc IDocument) error {
 			break
 		}
 	}
-	if ext := doc.GetPole("DocumentWhere.Compare.Extension"); !ext.IsNull() {
-		if dw.ExtensionName, err = ext.String(); err != nil {
-			return err
-		}
+	if ext := doc.GetPole("DocumentWhere.Compare.Extension"); !IsNull(ext) {
+		dw.ExtensionName = ext.(string)
 	}
 	return nil
 }

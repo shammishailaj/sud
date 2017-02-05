@@ -55,52 +55,22 @@ func (state *queryState) AddParam(value interface{}) string {
 	return "$" + strconv.Itoa(len(state.params))
 }
 func (state *queryState) AddParamObject(value Object) (string, error) {
-	if value.IsNull() {
+	if IsNull(value) {
 		return state.AddParam(nil), nil
 	}
-	switch value.Type() {
-	case "BooleanValue":
-		if v, err := value.Boolean(); err != nil {
-			return "", err
-		} else {
-			return state.AddParam(v), nil
-		}
-	case "StringValue":
-		if v, err := value.String(); err != nil {
-			return "", err
-		} else {
-			return state.AddParam(v), nil
-		}
-	case "Int64Value":
-		if v, err := value.Int64(); err != nil {
-			return "", err
-		} else {
-			return state.AddParam(v), nil
-		}
-	case "DateValue":
-		if v, err := value.Date(); err != nil {
-			return "", err
-		} else {
-			return state.AddParam(v), nil
-		}
-	case "DateTimeValue":
-		if v, err := value.DateTime(); err != nil {
-			return "", err
-		} else {
-			return state.AddParam(v), nil
-		}
-
-	case "DocumentLinkValue":
-		dl, err := value.DocumentLink()
-		if err != nil {
-			return "", err
-		}
-		if len(dl) != 16 {
-			return "", errors.New("convert type error DocumentLinkValue")
-		}
-		return state.AddParam(dl[0:16]), nil
+	switch v := value.(type) {
+	case bool:
+		return state.AddParam(v), nil
+	case string:
+		return state.AddParam(v), nil
+	case int64:
+		return state.AddParam(v), nil
+	case time.Time:
+		return state.AddParam(v), nil
+	case UUID:
+		return state.AddParam(v), nil
 	default:
-		return "", errors.New("convert type error " + value.Type())
+		return "", errors.New("type not support")
 	}
 }
 func (state *queryState) AddOrder(order string) {
@@ -220,7 +190,7 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 }
 func (state *queryState) SetDocumentPoles(doc *document, values [](interface{})) error {
 	for poleName, pti := range state.poles {
-		o := Object{}
+		var o Object
 		switch pti.PoleInfo.GetPoleType() {
 		case "BooleanValue":
 			v, ok := values[pti.N].(*sql.NullBool)
@@ -228,9 +198,9 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o.SetNull()
+				o = NULL
 			} else {
-				o.SetBoolean(v.Bool)
+				o = v.Bool
 			}
 		case "StringValue":
 			v, ok := values[pti.N].(*sql.NullString)
@@ -238,9 +208,9 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o.SetNull()
+				o = NULL
 			} else {
-				o.SetString(v.String)
+				o = v.String
 			}
 		case "DateValue":
 			v, ok := values[pti.N].(**time.Time)
@@ -248,9 +218,9 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 				return errors.New("pole read error " + poleName)
 			}
 			if *v == nil {
-				o.SetNull()
+				o = NULL
 			} else {
-				o.SetDate(*(*v))
+				o = *(*v)
 			}
 			//o.SetDate(**v)
 			//fmt.Println(v, *v, v == nil, *v == nil, ok)
@@ -261,9 +231,9 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o.SetNull()
+				o = NULL
 			} else {
-				o.SetInt64(v.Int64)
+				o = v.Int64
 			}
 		default:
 			fmt.Println(pti.PoleInfo.GetPoleType())

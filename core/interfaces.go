@@ -44,6 +44,15 @@ func (u *UUID) Scan(value interface{}) error {
 		*u = bytes
 		return nil
 	}
+	strings, ok := value.(string)
+	if ok {
+		if uuid, err := uuid.FromString(strings); err == nil {
+			*u = uuid.Bytes()
+			return nil
+		} else {
+			return err
+		}
+	}
 	return errors.New("convert error UUID")
 
 }

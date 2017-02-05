@@ -15,31 +15,31 @@ type PoleCheckerStringValue struct {
 }
 
 func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value Object) error {
-	if pcsv.AllowNull && Value.IsNull() {
+	if pcsv.AllowNull && IsNull(Value) {
 		return nil
 	}
-	if Value.Type() != "String" {
+	var ok bool
+	var ValueString string
+	if ValueString, ok = Value.(string); ok {
 		return errors.New("Value type not string")
 	}
 	if len(pcsv.List) > 0 {
-		if v, err := Value.String(); err == nil {
-			if _, ok := pcsv.List[v]; !ok {
-				return errors.New("Value " + v + "  note contain list " + fmt.Sprintln(pcsv.List))
-			}
-		} else {
-			return err
+		if _, ok := pcsv.List[ValueString]; !ok {
+			return errors.New("Value " + ValueString + "  note contain list " + fmt.Sprintln(pcsv.List))
 		}
 	}
 	return nil
 }
 func (pcsv *PoleCheckerStringValue) Load(doc IDocument) {
-	if !doc.GetPole("Configuration.PoleInfo.CheckerStringValueAllowNull").IsNull() {
-		if v, err := doc.GetPole("Configuration.PoleInfo.CheckerStringValueAllowNull").String(); err != nil {
+	CheckerStringValueAllowNull := doc.GetPole("Configuration.PoleInfo.CheckerStringValueAllowNull")
+	CheckerStringValueList := doc.GetPole("Configuration.PoleInfo.CheckerStringValueList")
+	if !IsNull(CheckerStringValueAllowNull) {
+		if v, ok := CheckerStringValueAllowNull.(string); ok {
 			pcsv.AllowNull = (v == "True")
 		}
 	}
-	if !doc.GetPole("Configuration.PoleInfo.CheckerStringValueList").IsNull() {
-		if v, err := doc.GetPole("Configuration.PoleInfo.CheckerStringValueList").String(); err != nil {
+	if !IsNull(CheckerStringValueList) {
+		if v, ok := CheckerStringValueList.(string); ok {
 			for _, s := range strings.Split(v, ",") {
 				pcsv.List[s] = true
 			}
@@ -57,8 +57,9 @@ type PoleCheckerInt64Value struct {
 }
 
 func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value Object) error {
-	v, err := Value.Int64()
-	if err != nil {
+	var ok bool
+	var v int64
+	if v, ok = Value.(int64); !ok {
 		return errors.New("Value type not int64")
 	}
 	if len(pciv.List) > 0 {
@@ -75,20 +76,21 @@ func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value Object) error {
 	return nil
 }
 func (pciv *PoleCheckerInt64Value) Load(doc IDocument) {
-	if v, err := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMin").Int64(); err != nil {
+	CheckerInt64ValueMin := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMin")
+	CheckerInt64ValueMax := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMax")
+	CheckerInt64ValueList := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueList")
+	if v, ok := CheckerInt64ValueMin.(int64); ok {
 		pciv.Min = true
 		pciv.MinValue = v
 	}
-	if v, err := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMax").Int64(); err != nil {
+	if v, ok := CheckerInt64ValueMax.(int64); ok {
 		pciv.Max = true
 		pciv.MaxValue = v
 	}
-	if !doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueList").IsNull() {
-		if v, err := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueList").String(); err != nil {
-			for _, s := range strings.Split(v, ",") {
-				if v, err := strconv.ParseInt(s, 10, 64); err == nil {
-					pciv.List[v] = true
-				}
+	if list, ok := CheckerInt64ValueList.(string); ok {
+		for _, s := range strings.Split(list, ",") {
+			if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+				pciv.List[v] = true
 			}
 		}
 	}

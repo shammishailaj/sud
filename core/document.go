@@ -24,14 +24,13 @@ func (doc *document) GetReadOnly() bool          { return doc.readOnly }
 func (doc *document) GetDeleteDocument() bool    { return doc.deleteDocument }
 func (doc *document) GetPole(name string) Object { return doc.poles[name] }
 func (doc *document) GetPoleValue(name string) interface{} {
-	obj := doc.poles[name]
-	return (&obj).Get()
+	return doc.poles[name]
 }
 func (doc *document) SetDocumentType(documenttype string) { doc.documentType = documenttype }
 func (doc *document) SetReadOnly(readonly bool)           { doc.readOnly = readonly }
 func (doc *document) SetDeleteDocument(delete bool)       { doc.deleteDocument = delete }
 func (doc *document) SetPoleValue(name string, value interface{}) error {
-	return doc.SetPole(name, NewObject(value))
+	return doc.SetPole(name, value)
 }
 func (doc *document) SetPole(name string, value Object) error {
 	var err error
@@ -175,7 +174,7 @@ func (tx *transaction) processWheres(conf *Configuration, DocumentType string, s
 			switch w.Operation {
 			case `Equally`:
 				{
-					if Value.IsNull() {
+					if IsNull(Value) {
 						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NULL `)
 					} else {
 						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" = ` + state.AddParam(w.Value))
@@ -183,7 +182,7 @@ func (tx *transaction) processWheres(conf *Configuration, DocumentType string, s
 				}
 			case `Not_Equally`:
 				{
-					if Value.IsNull() {
+					if IsNull(Value) {
 						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NOT NULL `)
 					} else {
 						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" <> ` + state.AddParam(w.Value))
