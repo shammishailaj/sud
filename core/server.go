@@ -13,7 +13,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Server struct {
+type Core struct {
 	databaseName          string
 	database              *sql.DB
 	lockTrancactions      *sync.Mutex
@@ -30,54 +30,54 @@ type Server struct {
 	callpulls             map[string]ICallPull
 }
 
-func (server *Server) addBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
-	server.lockBaseConfiguration.Lock()
-	defer server.lockBaseConfiguration.Unlock()
-	_, ok := server.baseConfiguration[ConfigurationName]
+func (core *Core) addBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
+	core.lockBaseConfiguration.Lock()
+	defer core.lockBaseConfiguration.Unlock()
+	_, ok := core.baseConfiguration[ConfigurationName]
 	if ok {
 		return false
 	}
-	server.baseConfiguration[ConfigurationName] = conf
+	core.baseConfiguration[ConfigurationName] = conf
 	return true
 }
-func (server *Server) addFullConfiguration(ConfigurationName string, conf *Configuration) bool {
-	server.lockFullConfiguration.Lock()
-	defer server.lockFullConfiguration.Unlock()
-	_, ok := server.fullConfiguration[ConfigurationName]
+func (core *Core) addFullConfiguration(ConfigurationName string, conf *Configuration) bool {
+	core.lockFullConfiguration.Lock()
+	defer core.lockFullConfiguration.Unlock()
+	_, ok := core.fullConfiguration[ConfigurationName]
 	if ok {
 		return false
 	}
-	server.fullConfiguration[ConfigurationName] = conf
+	core.fullConfiguration[ConfigurationName] = conf
 	return true
 }
 
-func (server *Server) getUser(UserName string) IUser {
-	user, ok := server.users[UserName]
+func (core *Core) getUser(UserName string) IUser {
+	user, ok := core.users[UserName]
 	if ok {
 		return user
 	}
 	return nil
 }
-func (server *Server) loadBaseConfiguration(ConfigurationName string) *Configuration {
-	server.lockBaseConfiguration.Lock()
-	defer server.lockBaseConfiguration.Unlock()
-	if conf, ok := server.baseConfiguration[ConfigurationName]; ok {
+func (core *Core) loadBaseConfiguration(ConfigurationName string) *Configuration {
+	core.lockBaseConfiguration.Lock()
+	defer core.lockBaseConfiguration.Unlock()
+	if conf, ok := core.baseConfiguration[ConfigurationName]; ok {
 		return conf
 	}
 	return nil
 }
-func (server *Server) getConfiguration(ConfigurationName string) *Configuration {
-	server.lockFullConfiguration.Lock()
-	defer server.lockFullConfiguration.Unlock()
-	conf, ok := server.fullConfiguration[ConfigurationName]
+func (core *Core) getConfiguration(ConfigurationName string) *Configuration {
+	core.lockFullConfiguration.Lock()
+	defer core.lockFullConfiguration.Unlock()
+	conf, ok := core.fullConfiguration[ConfigurationName]
 	if ok {
 		return conf
 	}
 	return nil
 }
-func (server *Server) LoadConfiguration(ConfigurationName string) (*Configuration, error) {
+func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, error) {
 	var conf *Configuration
-	if conf = server.getConfiguration(ConfigurationName); conf != nil {
+	if conf = core.getConfiguration(ConfigurationName); conf != nil {
 		return conf, nil
 	}
 	conf = NewConfiguration()
@@ -88,7 +88,7 @@ func (server *Server) LoadConfiguration(ConfigurationName string) (*Configuratio
 		var lconf *Configuration
 		var ok bool
 		if lconf, ok = loadConfiguration[ConfigurationName]; !ok {
-			lconf = server.loadBaseConfiguration(ConfigurationName)
+			lconf = core.loadBaseConfiguration(ConfigurationName)
 			if lconf == nil {
 				return errors.New("configuration not found: " + ConfigurationName)
 			}
@@ -128,15 +128,14 @@ func (server *Server) LoadConfiguration(ConfigurationName string) (*Configuratio
 			}
 		}
 	}
-	server.addFullConfiguration(ConfigurationName, conf)
+	core.addFullConfiguration(ConfigurationName, conf)
 	return conf, nil
 }
 
 //getConfiguration
-func NewServer(DatabaseName string, ConnectionString string) (*Server, error) {
+func NewCore(DatabaseName string, ConnectionString string) (*Core, error) {
 	var err error
-	async := callpull.NewCallPull()
-	server := &Server{
+	core := &Core{
 		databaseName:          DatabaseName,
 		genUID:                make(chan string),
 		lockTrancactions:      &sync.Mutex{},
@@ -148,55 +147,59 @@ func NewServer(DatabaseName string, ConnectionString string) (*Server, error) {
 		lockUsers:             &sync.Mutex{},
 		users:                 make(map[string]IUser),
 		close:                 false,
-		listenpulls:           map[string]IListenPull{"async": async},
-		callpulls:             map[string]ICallPull{"async": async, "std": StdCallPull},
+		listenpulls:           map[string]IListenPull{},
+		callpulls:             map[string]ICallPull{},
 	}
-	server.database, err = sql.Open("postgres", ConnectionString)
+	async := callpull.NewCallPull()
+	core.listenpulls["async"] = async
+	core.callpulls["async"] = async
+	core.callpulls["std"] = GetStdPull(core)
+	core.database, err = sql.Open("postgres", ConnectionString)
 	if err != nil {
 		return nil, err
 	}
-	err = server.database.Ping()
+	err = core.database.Ping()
 	if err != nil {
-		server.database.Close()
+		core.database.Close()
 		log.Fatalln(err)
 		return nil, err
 	}
-	go server.gogenUID()
-	server.loadDefaultsConfiguration()
-	server.users["Test"] = &User{UserName: "Test", HashPassword: GenHashPassword("Test"), Access: map[string]bool{"CheckConfiguration": true}}
-	return server, nil
+	go core.gogenUID()
+	core.loadDefaultsConfiguration()
+	core.users["Test"] = &User{UserName: "Test", HashPassword: GenHashPassword("Test"), Access: map[string]bool{"CheckConfiguration": true}}
+	return core, nil
 }
-func (server *Server) gogenUID() {
-	for !server.close {
-		server.genUID <- uuid.NewV4().String()
+func (core *Core) gogenUID() {
+	for !core.close {
+		core.genUID <- uuid.NewV4().String()
 	}
 }
-func (server *Server) getTransaction(TransactionUID string) (*transaction, error) {
-	server.lockTrancactions.Lock()
-	defer server.lockTrancactions.Unlock()
-	tx, ok := server.trancactions[TransactionUID]
+func (core *Core) getTransaction(TransactionUID string) (*transaction, error) {
+	core.lockTrancactions.Lock()
+	defer core.lockTrancactions.Unlock()
+	tx, ok := core.trancactions[TransactionUID]
 	if ok {
 		return tx, nil
 	}
 	return nil, errors.New("transaction not found: " + TransactionUID)
 }
-func (server *Server) BeginTransaction() (string, error) {
-	uid := <-server.genUID
-	tx, err := server.database.Begin()
+func (core *Core) BeginTransaction() (string, error) {
+	uid := <-core.genUID
+	tx, err := core.database.Begin()
 	if err != nil {
 		return "", nil
 	}
-	server.lockTrancactions.Lock()
-	defer server.lockTrancactions.Unlock()
-	server.trancactions[uid] = &transaction{tx: tx, server: server}
+	core.lockTrancactions.Lock()
+	defer core.lockTrancactions.Unlock()
+	core.trancactions[uid] = &transaction{tx: tx, core: core}
 	return uid, nil
 }
-func (server *Server) RollbackTransaction(TransactionUID string) {
-	server.lockTrancactions.Lock()
-	defer server.lockTrancactions.Unlock()
-	t, ok := server.trancactions[TransactionUID]
+func (core *Core) RollbackTransaction(TransactionUID string) {
+	core.lockTrancactions.Lock()
+	defer core.lockTrancactions.Unlock()
+	t, ok := core.trancactions[TransactionUID]
 	if ok {
-		defer delete(server.trancactions, TransactionUID)
+		defer delete(core.trancactions, TransactionUID)
 	} else {
 		return
 	}
@@ -205,12 +208,12 @@ func (server *Server) RollbackTransaction(TransactionUID string) {
 		log.Println(err)
 	}
 }
-func (server *Server) CommitTransaction(TransactionUID string) {
-	server.lockTrancactions.Lock()
-	defer server.lockTrancactions.Unlock()
-	t, ok := server.trancactions[TransactionUID]
+func (core *Core) CommitTransaction(TransactionUID string) {
+	core.lockTrancactions.Lock()
+	defer core.lockTrancactions.Unlock()
+	t, ok := core.trancactions[TransactionUID]
 	if ok {
-		defer delete(server.trancactions, TransactionUID)
+		defer delete(core.trancactions, TransactionUID)
 	} else {
 		return
 	}
@@ -220,12 +223,12 @@ func (server *Server) CommitTransaction(TransactionUID string) {
 	}
 }
 
-func (server *Server) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, errResult error) {
+func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, errResult error) {
 	var err error
 	var ok bool
 	var config *Configuration
 	var callinfo ICallInfo
-	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, nil, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
@@ -233,17 +236,17 @@ func (server *Server) Listen(ConfigurationName string, Name string, TimeoutWait 
 	}
 	pullName := callinfo.GetPullName()
 	var listenpull IListenPull
-	if listenpull, ok = server.listenpulls[pullName]; !ok {
+	if listenpull, ok = core.listenpulls[pullName]; !ok {
 		return nil, nil, errors.New("listen pull not found: " + pullName)
 	}
 	return listenpull.Listen(Name, TimeoutWait)
 }
-func (server *Server) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration) (interface{}, error) {
+func (core *Core) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration) (interface{}, error) {
 	var err error
 	var ok bool
 	var config *Configuration
 	var callinfo ICallInfo
-	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
@@ -251,7 +254,7 @@ func (server *Server) Call(ConfigurationName string, Name string, Params map[str
 	}
 	pullName := callinfo.GetPullName()
 	var callpull ICallPull
-	if callpull, ok = server.callpulls[pullName]; !ok {
+	if callpull, ok = core.callpulls[pullName]; !ok {
 		return nil, errors.New("call pull not found: " + pullName)
 	}
 	return callpull.Call(Name, Params, TimeoutWait)

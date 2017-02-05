@@ -13,8 +13,8 @@ type IQuery interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 type transaction struct {
-	server *Server
-	tx     *sql.Tx
+	core *Core
+	tx   *sql.Tx
 }
 
 func (t *transaction) Commit() error {
@@ -37,18 +37,18 @@ func (t *transaction) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 type Client struct {
-	server            *Server
+	core              *Core
 	user              IUser
 	configurationName string
 }
 
-func (server *Server) NewClient(Login string, Password string, ConfigurationName string) *Client {
-	user := server.getUser(Login)
+func (core *Core) NewClient(Login string, Password string, ConfigurationName string) *Client {
+	user := core.getUser(Login)
 	if !user.GetCheckPassword(Password) {
 		return nil
 	}
-	//configuration := server.LoadConfiguration(ConfigurationName)
-	return &Client{user: user, configurationName: ConfigurationName, server: server}
+	//configuration := core.LoadConfiguration(ConfigurationName)
+	return &Client{user: user, configurationName: ConfigurationName, core: core}
 }
 
 /**/

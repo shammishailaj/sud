@@ -113,3 +113,14 @@ type ICallListenPull interface {
 }
 type IDocumentWhere interface {
 }
+
+type IClient interface {
+	GetConfiguration() string
+	BeginTransaction() string
+	CommitTransaction(TransactionUID string)
+	RollbackTransaction(TransactionUID string)
+	Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, errResult error)
+	Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (interface{}, error)
+	GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error)
+	SetDocumentPoles(TransactionUID string, DocumentType string, DocumentUID string, poles map[string]interface{}) error
+}

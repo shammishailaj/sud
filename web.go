@@ -9,8 +9,6 @@ import (
 	_ "github.com/crazyprograms/sud/test"
 )
 
-type Server struct {
-}
 type d interface{}
 type Query struct {
 	Action string               `json:",omitempty"`
@@ -22,19 +20,6 @@ type Query struct {
 	Time   map[string]time.Time `json:",omitempty"`
 	V      d                    `json:",omitempty"`
 }
-
-/*func New() {
-	s := &Server{}
-	http.HandleFunc("/json/", func(w http.ResponseWriter, r *http.Request) {
-		file, header, err := r.FormFile("file")
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		defer file.Close()
-		//json
-	})
-}*/
 type A struct {
 	Value1 string
 }
@@ -44,22 +29,24 @@ type B struct {
 
 func main() {
 	var err error
-	var server *core.Server
-	if server, err = core.NewServer("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
+	var c *core.Core
+	if c, err = core.NewCore("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
 		fmt.Println(err)
 	}
-	//client := server.NewClient("Test", "Test", "Configuration")
+	//client := c.NewClient("Test", "Test", "Configuration")
 	var tid string
-	if tid, err = server.BeginTransaction(); err != nil {
+	if tid, err = c.BeginTransaction(); err != nil {
 		fmt.Println(err)
 	}
-	defer server.RollbackTransaction(tid)
-	fmt.Println(server.CheckConfiguration(tid, "Configuration"))
-	fmt.Println(server.CheckConfiguration(tid, "Document"))
+	defer c.RollbackTransaction(tid)
+	fmt.Println(c.CheckConfiguration(tid, "Configuration"))
+	fmt.Println(c.CheckConfiguration(tid, "Document"))
+	c.NewClient("Test", "Test", "FileStorage")
+
 	go func() {
 		defer fmt.Println("end")
 		for {
-			_, Result, err := server.Listen("Test", "TestAsync", time.Second)
+			_, Result, err := c.Listen("Test", "TestAsync", time.Second)
 			if err != nil {
 				return
 			}
@@ -67,8 +54,8 @@ func main() {
 		}
 	}()
 
-	fmt.Println(server.Call("Test", "TestStd", map[string]interface{}{}, time.Second))
-	fmt.Println(server.Call("Test", "TestAsync", map[string]interface{}{}, time.Second))
+	fmt.Println(c.Call("Test", "TestStd", map[string]interface{}{}, time.Second))
+	fmt.Println(c.Call("Test", "TestAsync", map[string]interface{}{}, time.Second))
 	time.Sleep(time.Second * 2)
 	/*doc, err := server.NewDocument(tid, "Document", "Document")
 	fmt.Println(doc.SetPoleValue("Document.DocumentType", "Q1"))

@@ -35,7 +35,7 @@ func initConfConfiguration() {
 func initConfEditConfiguration() {
 	conf := NewConfiguration()
 	conf.AddType("ConfigurationEdit", "Configuration", true, true, true, "Конфигурация")
-	conf.dependConfigurationName = []string{"Configuration"}
+	conf.AddDependConfiguration("Configuration")
 	InitAddBaseConfiguration("ConfigurationEdit", conf)
 }
 func initDocumentConfiguration() {

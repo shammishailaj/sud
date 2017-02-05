@@ -70,6 +70,9 @@ func (conf *Configuration) GetPolesInfo(DocumentType string, Poles []string) map
 	}
 	return map[string]IPoleInfo{}
 }
+func (conf *Configuration) AddDependConfiguration(DependConfigurationName string) {
+	conf.dependConfigurationName = append(conf.dependConfigurationName, DependConfigurationName)
+}
 func (conf *Configuration) AddCall(ConfigurationName string, Name string, PullName string, Call bool, Listen bool, Title string) {
 	conf.callsInfo[Name] = &CallInfo{ConfigurationName: ConfigurationName, Name: Name, PullName: PullName, Call: Call, Listen: Listen, Title: Title}
 }
@@ -102,8 +105,8 @@ func NewConfiguration() *Configuration {
 		dependConfigurationName: []string{},
 	}
 }
-func (server *Server) loadDefaultsConfiguration() {
+func (core *Core) loadDefaultsConfiguration() {
 	for Name, Conf := range baseConfiguration {
-		server.addBaseConfiguration(Name, Conf)
+		core.addBaseConfiguration(Name, Conf)
 	}
 }

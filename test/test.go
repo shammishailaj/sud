@@ -6,12 +6,12 @@ import (
 	"github.com/crazyprograms/sud/core"
 )
 
-func testStd(Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
+func testStd(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
 	return "Test Ok", nil
 }
 func init() {
 	initDocumentConfiguration()
-	core.StdCallPull.AddCall("TestStd", testStd)
+	core.AddStdCall("TestStd", testStd)
 }
 func initDocumentConfiguration() {
 	conf := core.NewConfiguration()

@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func (server *Server) addColumn(tx IQuery, info *PoleTableInfo) error {
+func (core *Core) addColumn(tx IQuery, info *PoleTableInfo) error {
 	var err error
 	PoleDBType := ""
 	var Q2 string = ""
@@ -53,15 +53,15 @@ func (server *Server) addColumn(tx IQuery, info *PoleTableInfo) error {
 	return nil
 
 }
-func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationName string) error {
+func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName string) error {
 	var err error
 	var ok bool
 	var tx *transaction
 	var config *Configuration
-	if tx, err = server.getTransaction(TransactionUID); err != nil {
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
-	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
 		return err
 	}
 	TablePoles := map[string]map[string]*PoleTableInfo{}
@@ -115,7 +115,7 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 		}
 		for ColumnName, pi := range ti {
 			if _, ok = poles[ColumnName]; !ok {
-				if err = server.addColumn(tx, pi); err != nil {
+				if err = core.addColumn(tx, pi); err != nil {
 					return err
 				}
 			}
@@ -124,14 +124,14 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 	return nil
 }
 
-func (server *Server) CreateDatabase() error {
+func (core *Core) CreateDatabase() error {
 	var err error
-	tid, err := server.BeginTransaction()
+	tid, err := core.BeginTransaction()
 	if err != nil {
 		return err
 	}
-	defer server.RollbackTransaction(tid)
-	tx, _ := server.getTransaction(tid)
+	defer core.RollbackTransaction(tid)
+	tx, _ := core.getTransaction(tid)
 
 	//dbname := con.getDBName()
 	if _, err = tx.Exec(`
@@ -146,6 +146,6 @@ CREATE TABLE "Document"
 	`); err != nil {
 		return err
 	}
-	server.CommitTransaction(tid)
+	core.CommitTransaction(tid)
 	return nil
 }

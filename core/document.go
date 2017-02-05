@@ -62,7 +62,7 @@ func (doc *document) GetConfiguration() *Configuration { return doc.configuratio
 func (tx *transaction) NewDocument(ConfigurationName string, DocumentType string) (*document, error) {
 	var err error
 	var config *Configuration
-	if config, err = tx.server.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
 	doc := &document{configuration: config, documentType: DocumentType, poles: map[string]Object{}, editpoles: map[string]bool{}}
@@ -129,11 +129,11 @@ func (tx *transaction) processWheres(conf *Configuration, DocumentType string, s
 			}
 			pti := PoleTableInfo{}
 			pti.FromPoleInfo(info)
-			state.AddTable(pti.TableName, "JOIN ["+pti.TableName+"] ON (["+pti.TableName+"].[__DocumentUID] = [Document].[__DocumentUID])")
+			state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID")`)
 			if w.ASC {
-				state.AddOrder("[" + pti.TableName + "].[" + pti.PoleName + "] ASC")
+				state.AddOrder(`"` + pti.TableName + `"."` + pti.PoleName + `" ASC`)
 			} else {
-				state.AddOrder("[" + pti.TableName + "].[" + pti.PoleName + "] DESC")
+				state.AddOrder(`"` + pti.TableName + `"."` + pti.PoleName + `" DESC`)
 			}
 		case DocumentWhereContainPole:
 			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
@@ -141,10 +141,10 @@ func (tx *transaction) processWheres(conf *Configuration, DocumentType string, s
 			}
 			pti := PoleTableInfo{}
 			pti.FromPoleInfo(info)
-			Table := "table" + strconv.Itoa(len(state.tables))
-			WithSQL := ""
-			state.AddTable("Contain_"+info.GetPoleName(), " LEFT JOIN ["+pti.TableName+"] AS ["+Table+"] "+WithSQL+" ON (["+Table+"].[__DocumentUID] = [Document].[__DocumentUID])")
-			state.AddWhere("[" + Table + "].[" + pti.PoleName + "] IS NOT NULL")
+			Table := `table` + strconv.Itoa(len(state.tables))
+			WithSQL := ``
+			state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+			state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NOT NULL`)
 
 		case DocumentWhereNotContainPole:
 			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
@@ -152,65 +152,73 @@ func (tx *transaction) processWheres(conf *Configuration, DocumentType string, s
 			}
 			pti := PoleTableInfo{}
 			pti.FromPoleInfo(info)
-			Table := "table" + strconv.Itoa(len(state.tables))
-			WithSQL := ""
+			Table := `table` + strconv.Itoa(len(state.tables))
+			WithSQL := ``
 			if w.TabLock {
-				WithSQL = "WITH (UPDLOCK)"
+				WithSQL = `WITH (UPDLOCK)`
 			}
-			if w.InTableName != "" {
+			if w.InTableName != `` {
 				d := new([]byte)
-				state.AddPoleSQL("["+Table+"].[__DocumentUID] AS ["+w.InTableName+"]", d)
+				state.AddPoleSQL(`"`+Table+`"."__DocumentUID" AS "`+w.InTableName+`"`, d)
 			}
-			state.AddTable("Contain_"+info.GetPoleName(), " LEFT JOIN ["+pti.TableName+"] AS ["+Table+"] "+WithSQL+" ON (["+Table+"].[__DocumentUID] = [Document].[__DocumentUID])")
-			state.AddWhere("[" + Table + "].[" + pti.PoleName + "] IS NULL")
+			state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+			state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NULL`)
 		case DocumentWhereCompare:
 			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 				return err
 			}
 			pti := PoleTableInfo{}
 			pti.FromPoleInfo(info)
-			state.AddTable(pti.TableName, "JOIN ["+pti.TableName+"] ON (["+pti.TableName+"].[__DocumentUID] = [Document].[__DocumentUID])")
+			state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID")`)
 			//String VarName = State.AddParam(where.getValue(m_Configuration));
 			Value := w.Value
 			switch w.Operation {
-			case "Equally":
+			case `Equally`:
 				{
 					if Value.IsNull() {
-						state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] IS NULL ")
+						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NULL `)
 					} else {
-						state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] = " + state.AddParam(w.Value))
+						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" = ` + state.AddParam(w.Value))
 					}
 				}
-			case "Not_Equally":
+			case `Not_Equally`:
 				{
 					if Value.IsNull() {
-						state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] IS NOT NULL ")
+						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NOT NULL `)
 					} else {
-						state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] <> " + state.AddParam(w.Value))
+						state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" <> ` + state.AddParam(w.Value))
 					}
 				}
 
-			case "Less":
-				state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] < " + state.AddParam(w.Value))
+			case `Less`:
+				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" < ` + state.AddParam(w.Value))
 
-			case "More":
-				state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] > " + state.AddParam(w.Value))
+			case `More`:
+				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" > ` + state.AddParam(w.Value))
 
-			case "NotLess":
-				state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] >= " + state.AddParam(w.Value))
-			case "NotMore":
-				state.AddWhere("[" + pti.TableName + "].[" + pti.PoleName + "] <= " + state.AddParam(w.Value))
+			case `NotLess`:
+				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" >= ` + state.AddParam(w.Value))
+			case `NotMore`:
+				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" <= ` + state.AddParam(w.Value))
 			default:
-				return errors.New(w.Operation + " not implemented")
+				return errors.New(w.Operation + ` not implemented`)
 			}
 		}
 	}
 	return nil
 }
+func (core *Core) GetDocuments(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) ([]IDocument, error) {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return nil, err
+	}
+	return tx.GetDocuments(ConfigurationName, DocumentType, poles, wheres)
+}
 func (tx *transaction) GetDocuments(ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) ([]IDocument, error) {
 	var err error
 	var config *Configuration
-	if config, err = tx.server.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
 	var DocumentUID []byte
@@ -250,13 +258,13 @@ func (tx *transaction) GetDocuments(ConfigurationName string, DocumentType strin
 	return documents, nil
 }
 
-func (server *Server) SaveDocument(TransactionUID string, doc *document) error {
+func (core *Core) SaveDocument(TransactionUID string, doc *document) error {
 	var err error
 	var ok bool
 	var pi IPoleInfo
 	var tl []*PoleTableInfo
 	var tx *transaction
-	if tx, err = server.getTransaction(TransactionUID); err != nil {
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
 	TablePole := map[string][]*PoleTableInfo{}
