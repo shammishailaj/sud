@@ -1,8 +1,9 @@
-package storage
+package core
 
 import (
 	"database/sql/driver"
 	"encoding/hex"
+	"time"
 
 	"errors"
 
@@ -62,7 +63,7 @@ type IDocument interface {
 	SetDeleteDocument(delete bool)
 	SetPole(name string, value Object) error
 	GetPoleNames() []string
-	GetConfiguration() *configuration
+	GetConfiguration() *Configuration
 }
 type ITypeInfo interface {
 	GetConfigurationName() string
@@ -94,9 +95,21 @@ type IPoleInfo interface {
 type ICallInfo interface {
 	GetConfigurationName() string
 	GetTitle() string
+	GetName() string
 	GetCall() bool
+	GetPullName() string
 	GetListen() bool
+}
+
+type ICallPull interface {
+	Call(Name string, Param map[string]interface{}, timeoutWait time.Duration) (interface{}, error)
+}
+type IListenPull interface {
+	Listen(Name string, timeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, err error)
+}
+type ICallListenPull interface {
+	ICallPull
+	IListenPull
 }
 type IDocumentWhere interface {
 }
-type loadConfiguration func(configuration Configuration, State loadState) error

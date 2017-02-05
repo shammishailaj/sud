@@ -1,4 +1,4 @@
-package storage
+package core
 
 type TypeInfo struct {
 	ConfigurationName string

@@ -1,4 +1,4 @@
-package storage
+package core
 
 import (
 	"database/sql"
@@ -57,7 +57,7 @@ func (server *Server) CheckConfiguration(TransactionUID string, ConfigurationNam
 	var err error
 	var ok bool
 	var tx *transaction
-	var config *configuration
+	var config *Configuration
 	if tx, err = server.getTransaction(TransactionUID); err != nil {
 		return err
 	}

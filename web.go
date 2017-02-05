@@ -5,7 +5,8 @@ import (
 
 	"fmt"
 
-	"github.com/crazyprograms/sud/storage"
+	"github.com/crazyprograms/sud/core"
+	_ "github.com/crazyprograms/sud/test"
 )
 
 type Server struct {
@@ -43,8 +44,8 @@ type B struct {
 
 func main() {
 	var err error
-	var server *storage.Server
-	if server, err = storage.NewServer("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
+	var server *core.Server
+	if server, err = core.NewServer("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
 		fmt.Println(err)
 	}
 	//client := server.NewClient("Test", "Test", "Configuration")
@@ -55,8 +56,21 @@ func main() {
 	defer server.RollbackTransaction(tid)
 	fmt.Println(server.CheckConfiguration(tid, "Configuration"))
 	fmt.Println(server.CheckConfiguration(tid, "Document"))
+	go func() {
+		defer fmt.Println("end")
+		for {
+			_, Result, err := server.Listen("Test", "TestAsync", time.Second)
+			if err != nil {
+				return
+			}
+			Result <- "Test async Ok"
+		}
+	}()
 
-	doc, err := server.NewDocument(tid, "Document", "Document")
+	fmt.Println(server.Call("Test", "TestStd", map[string]interface{}{}, time.Second))
+	fmt.Println(server.Call("Test", "TestAsync", map[string]interface{}{}, time.Second))
+	time.Sleep(time.Second * 2)
+	/*doc, err := server.NewDocument(tid, "Document", "Document")
 	fmt.Println(doc.SetPoleValue("Document.DocumentType", "Q1"))
 	fmt.Println(server.SaveDocument(tid, doc))
 	//server.GetDocuments(tid, "Document", "Test", []string{"Document.*"}, []storage.IDocumentWhere{})

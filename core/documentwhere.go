@@ -1,4 +1,4 @@
-package storage
+package core
 
 type DocumentWhereContainPole struct {
 	PoleName string

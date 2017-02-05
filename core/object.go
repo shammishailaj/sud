@@ -1,4 +1,4 @@
-package storage
+package core
 
 import (
 	"database/sql/driver"

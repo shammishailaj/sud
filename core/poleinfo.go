@@ -1,4 +1,4 @@
-package storage
+package core
 
 type PoleInfo struct {
 	ConfigurationName string

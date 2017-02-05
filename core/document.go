@@ -1,4 +1,4 @@
-package storage
+package core
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 )
 
 type document struct {
-	configuration  *configuration
+	configuration  *Configuration
 	documentUID    UUID
 	documentType   string
 	readOnly       bool
@@ -35,7 +35,7 @@ func (doc *document) SetPoleValue(name string, value interface{}) error {
 }
 func (doc *document) SetPole(name string, value Object) error {
 	var err error
-	info, err := doc.configuration.getPoleInfo(doc.documentType, name)
+	info, err := doc.configuration.GetPoleInfo(doc.documentType, name)
 	if err != nil {
 		return err
 	}
@@ -58,15 +58,11 @@ func (doc *document) GetPoleNames() []string {
 	}
 	return poles
 }
-func (doc *document) GetConfiguration() *configuration { return doc.configuration }
-func (server *Server) NewDocument(TransactionUID string, ConfigurationName string, DocumentType string) (*document, error) {
+func (doc *document) GetConfiguration() *Configuration { return doc.configuration }
+func (tx *transaction) NewDocument(ConfigurationName string, DocumentType string) (*document, error) {
 	var err error
-	var tx *transaction
-	var config *configuration
-	if tx, err = server.getTransaction(TransactionUID); err != nil {
-		return nil, err
-	}
-	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+	var config *Configuration
+	if config, err = tx.server.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
 	doc := &document{configuration: config, documentType: DocumentType, poles: map[string]Object{}, editpoles: map[string]bool{}}
@@ -113,7 +109,7 @@ func printValue(pval *interface{}) {
 	}
 }
 
-func (server *Server) processWheres(conf *configuration, DocumentType string, state *queryState, wheres []IDocumentWhere) error {
+func (tx *transaction) processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []IDocumentWhere) error {
 	var where IDocumentWhere
 	var info IPoleInfo
 	var err error
@@ -128,7 +124,7 @@ func (server *Server) processWheres(conf *configuration, DocumentType string, st
 			}
 		case DocumentWhereOrder:
 
-			if info, err = conf.getPoleInfo(DocumentType, w.PoleName); err != nil {
+			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 				return err
 			}
 			pti := PoleTableInfo{}
@@ -140,7 +136,7 @@ func (server *Server) processWheres(conf *configuration, DocumentType string, st
 				state.AddOrder("[" + pti.TableName + "].[" + pti.PoleName + "] DESC")
 			}
 		case DocumentWhereContainPole:
-			if info, err = conf.getPoleInfo(DocumentType, w.PoleName); err != nil {
+			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 				return err
 			}
 			pti := PoleTableInfo{}
@@ -151,7 +147,7 @@ func (server *Server) processWheres(conf *configuration, DocumentType string, st
 			state.AddWhere("[" + Table + "].[" + pti.PoleName + "] IS NOT NULL")
 
 		case DocumentWhereNotContainPole:
-			if info, err = conf.getPoleInfo(DocumentType, w.PoleName); err != nil {
+			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 				return err
 			}
 			pti := PoleTableInfo{}
@@ -168,7 +164,7 @@ func (server *Server) processWheres(conf *configuration, DocumentType string, st
 			state.AddTable("Contain_"+info.GetPoleName(), " LEFT JOIN ["+pti.TableName+"] AS ["+Table+"] "+WithSQL+" ON (["+Table+"].[__DocumentUID] = [Document].[__DocumentUID])")
 			state.AddWhere("[" + Table + "].[" + pti.PoleName + "] IS NULL")
 		case DocumentWhereCompare:
-			if info, err = conf.getPoleInfo(DocumentType, w.PoleName); err != nil {
+			if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 				return err
 			}
 			pti := PoleTableInfo{}
@@ -211,21 +207,16 @@ func (server *Server) processWheres(conf *configuration, DocumentType string, st
 	}
 	return nil
 }
-func (server *Server) GetDocuments(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) ([]IDocument, error) {
+func (tx *transaction) GetDocuments(ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) ([]IDocument, error) {
 	var err error
-	//var ok bool
-	var tx *transaction
-	var config *configuration
-	if tx, err = server.getTransaction(TransactionUID); err != nil {
-		return nil, err
-	}
-	if config, err = server.LoadConfiguration(ConfigurationName); err != nil {
+	var config *Configuration
+	if config, err = tx.server.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
 	var DocumentUID []byte
 	state := NewQueryState()
 	state.AddPoleSQL(`"Document"."__DocumentUID"`, &DocumentUID)
-	for poleName, pi := range config.getPolesInfo(DocumentType, poles) {
+	for poleName, pi := range config.GetPolesInfo(DocumentType, poles) {
 		state.AddPole(poleName, pi)
 	}
 	var SQLTop string
@@ -270,7 +261,7 @@ func (server *Server) SaveDocument(TransactionUID string, doc *document) error {
 	}
 	TablePole := map[string][]*PoleTableInfo{}
 	for pole := range doc.editpoles {
-		if pi, err = doc.configuration.getPoleInfo(doc.documentType, pole); err != nil {
+		if pi, err = doc.configuration.GetPoleInfo(doc.documentType, pole); err != nil {
 			return err
 		}
 		pti := &PoleTableInfo{}

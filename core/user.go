@@ -1,4 +1,4 @@
-package storage
+package core
 
 import "crypto/sha1"
 import "encoding/hex"
