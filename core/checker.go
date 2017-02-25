@@ -14,13 +14,13 @@ type PoleCheckerStringValue struct {
 	MaxLenValue int64
 }
 
-func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value Object) error {
+func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value interface{}) error {
 	if pcsv.AllowNull && IsNull(Value) {
 		return nil
 	}
 	var ok bool
 	var ValueString string
-	if ValueString, ok = Value.(string); ok {
+	if ValueString, ok = Value.(string); !ok {
 		return errors.New("Value type not string")
 	}
 	if len(pcsv.List) > 0 {
@@ -56,7 +56,7 @@ type PoleCheckerInt64Value struct {
 	AllowNull bool
 }
 
-func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value Object) error {
+func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value interface{}) error {
 	var ok bool
 	var v int64
 	if v, ok = Value.(int64); !ok {

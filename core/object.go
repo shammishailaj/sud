@@ -4,7 +4,7 @@ type Object interface{}
 
 var NULL = struct{}{}
 
-func IsNull(obj Object) bool {
+func IsNull(obj interface{}) bool {
 	if obj == nil {
 		return true
 	}

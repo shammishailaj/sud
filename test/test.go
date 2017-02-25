@@ -3,11 +3,12 @@ package test
 import (
 	"time"
 
+	"github.com/crazyprograms/callpull"
 	"github.com/crazyprograms/sud/core"
 )
 
-func testStd(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
-	return "Test Ok", nil
+func testStd(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
+	return callpull.Result{Result: "Test Ok"}, nil
 }
 func init() {
 	initDocumentConfiguration()

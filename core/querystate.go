@@ -3,7 +3,6 @@ package core
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -34,11 +33,11 @@ func NewQueryState() *queryState {
 func (state *queryState) AddPole(poleName string, pi IPoleInfo) {
 	pti := &ptiInfo{}
 	pti.FromPoleInfo(pi)
-	pti.SQL = "[dbo].[" + pti.TableName + "].[" + pti.PoleName + "]"
+	pti.SQL = `"` + pti.TableName + `"."` + pti.PoleName + `"`
 	pti.N = -1
 	state.num++
 	state.poles[pi.GetPoleName()] = pti
-	state.AddTable(pti.TableName, " LEFT JOIN [dbo].["+pti.TableName+"] ON [dbo].["+pti.TableName+"].[__DocumentUID] = [dbo].[Document].[__DocumentUID]")
+	state.AddTable(pti.TableName, `LEFT JOIN "`+pti.TableName+`" ON "`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID"`)
 }
 func (state *queryState) AddPoleSQL(poleSQL string, link interface{}) int {
 	state.polesSQL = append(state.polesSQL, poleSQL)
@@ -115,14 +114,10 @@ func (state *queryState) GenSQLTables(baseTable string) string {
 	return " FROM " + SQLTables
 }
 func (state *queryState) GenSQLWheres() string {
-	SQLWheres := ""
 	if len(state.wheres) == 0 {
 		return ""
 	}
-	for _, SQL := range state.wheres {
-		SQLWheres += SQL
-	}
-	return " WHERE " + SQLWheres
+	return " WHERE (" + strings.Join(state.wheres, ") AND (") + ")"
 }
 func (state *queryState) GenSQLPoles() string {
 	poles := make([]string, len(state.polesSQL)+len(state.poles))
@@ -155,8 +150,7 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 		case "Int64Value":
 			NumInt64++
 		default:
-			fmt.Println(pti.PoleInfo.GetPoleType())
-			panic("")
+			panic(pti.PoleInfo.GetPoleType())
 		}
 	}
 	ValueTime := make([]*time.Time, NumTime)
@@ -182,13 +176,12 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 			values[pti.N] = &ValueInt64[NumInt64]
 			NumInt64++
 		default:
-			fmt.Println(pti.PoleInfo.GetPoleType())
-			panic("")
+			panic(pti.PoleInfo.GetPoleType())
 		}
 	}
 	return values
 }
-func (state *queryState) SetDocumentPoles(doc *document, values [](interface{})) error {
+func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](interface{})) error {
 	for poleName, pti := range state.poles {
 		var o Object
 		switch pti.PoleInfo.GetPoleType() {
@@ -222,9 +215,6 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 			} else {
 				o = *(*v)
 			}
-			//o.SetDate(**v)
-			//fmt.Println(v, *v, v == nil, *v == nil, ok)
-			/*if !v.Valid */
 		case "Int64Value":
 			v, ok := values[pti.N].(*sql.NullInt64)
 			if !ok {
@@ -236,10 +226,9 @@ func (state *queryState) SetDocumentPoles(doc *document, values [](interface{}))
 				o = v.Int64
 			}
 		default:
-			fmt.Println(pti.PoleInfo.GetPoleType())
-			panic("")
+			panic(pti.PoleInfo.GetPoleType())
 		}
-		doc.poles[poleName] = o
+		doc[poleName] = o
 	}
 	return nil
 }

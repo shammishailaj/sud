@@ -5,10 +5,12 @@ import (
 
 	"errors"
 
+	"github.com/crazyprograms/callpull"
 	"github.com/crazyprograms/sud/core"
+	"github.com/crazyprograms/sud/sortex"
 )
 
-func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
+func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
 	var ok bool
 	var err error
 	var HashI interface{}
@@ -16,50 +18,72 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 	var TransactionUIDI interface{}
 	var TransactionUID string
 	if HashI, ok = Param["Hash"]; !ok {
-		return nil, errors.New("not found parameter Storage")
+		return callpull.Result{Result: nil, Error: errors.New("not found parameter Storage")}, nil
 	}
 	if Hash, ok = HashI.(string); !ok {
-		return nil, errors.New("parameter Storage is not string")
+		return callpull.Result{Result: nil, Error: errors.New("parameter Storage is not string")}, nil
 	}
 	if TransactionUIDI, ok = Param["TransactionUID"]; !ok {
 		TransactionUID, err = cr.BeginTransaction()
 		if err != nil {
-			return nil, err
+			return callpull.Result{Result: nil, Error: err}, nil
 		}
 		defer cr.CommitTransaction(TransactionUID)
+		Param["TransactionUID"] = TransactionUID
 	} else {
 		if TransactionUID, ok = TransactionUIDI.(string); !ok {
-			return nil, errors.New("parameter Storage is not string")
+			return callpull.Result{Result: nil, Error: errors.New("parameter Storage is not string")}, nil
 		}
 	}
-	var docs []core.IDocument
-	if docs, err = cr.GetDocuments(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []core.IDocumentWhere{&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: core.NewObject(Hash)}}); err != nil {
-		return nil, err
+	var docs map[string]map[string]interface{}
+	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []core.IDocumentWhere{&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
+		return callpull.Result{Result: nil, Error: err}, nil
 	}
-	if len(docs) != 1 {
-		return nil, errors.New("stream not found: " + Hash)
+	if len(docs) == 0 {
+		return callpull.Result{Result: nil, Error: errors.New("stream not found: " + Hash)}, nil
 	}
-	var Storage string
-	if Storage, err = docs[0].GetPole("Storage.Stream.Storage").String(); err != nil {
-		return nil, err
+	Storages := make([]string, len(docs), len(docs))
+	Prioritets := map[string]int64{}
+	n := 0
+	for _, doc := range docs {
+		var StorageP string
+		if StorageP, ok = doc["Storage.Stream.Storage"].(string); !ok {
+			return callpull.Result{Result: nil, Error: errors.New("not found Storage.Stream.Storage ")}, nil
+		}
+		var PriorityP int64
+		if PriorityP, ok = doc["Storage.Stream.Priority"].(int64); !ok {
+			return callpull.Result{Result: nil, Error: errors.New("not found Storage.Stream.Priority ")}, nil
+		}
+		Prioritets[StorageP] = PriorityP
+		Storages[n] = StorageP
+		n++
 	}
-	return cr.Call("Storage."+Storage, "Storage."+Storage+".GetStream", Param, timeOutWait)
+	sortex.SortStrings(Storages, func(i, j int) bool { return Prioritets[Storages[i]] < Prioritets[Storages[j]] })
+	var r callpull.Result
+	for i := 0; i < len(Storages); i++ {
+		r, err = cr.Call("Storage."+Storages[i], "Storage."+Storages[i]+".GetStream", Param, timeOutWait)
+		if err == nil {
+			return r, nil
+		}
+	}
+	return r, err
 }
-func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
+func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
 	var ok bool
 	var StorageI interface{}
 	var Storage string
 	if StorageI, ok = Param["Storage"]; !ok {
-		return nil, errors.New("not found parameter Storage")
+		return callpull.Result{Result: nil, Error: errors.New("not found parameter Storage")}, nil
 	}
 	if Storage, ok = StorageI.(string); !ok {
-		return nil, errors.New("parameter Storage is not string")
+		return callpull.Result{Result: nil, Error: errors.New("parameter Storage is not string")}, nil
 	}
 	return cr.Call("Storage."+Storage, "Storage."+Storage+".SetStream", Param, timeOutWait)
 }
 func init() {
 	initConfiguration()
-	core.AddStdCall("Storage.GetStream", stdGetSetStream)
+	initDefaultStorageConfiguration()
+	core.AddStdCall("Storage.GetStream", stdGetStream)
 	core.AddStdCall("Storage.SetStream", stdSetStream)
 }
 func initConfiguration() {
@@ -68,9 +92,10 @@ func initConfiguration() {
 	conf.AddCall("Storage", "Storage.SetStream", "std", true, false, "")
 
 	conf.AddType("Storage", "Storage.Stream", true, true, true, "Поток")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Hash", "StringValue", core.NewObject(nil), "Unique", &core.PoleCheckerStringValue{}, true, true, "Хеш потока")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Size", "Int64Value", core.NewObject(nil), "None", &core.PoleCheckerInt64Value{}, true, true, "Размер в байтах")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Storage", "StringValue", core.NewObject(nil), "None", &core.PoleCheckerStringValue{}, true, true, "Имя хранилища в котором хранится")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Hash", "StringValue", core.NULL, "Unique", &core.PoleCheckerStringValue{}, true, true, "Хеш потока")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Size", "Int64Value", core.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Размер в байтах")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Priority", "Int64Value", core.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Приоритет")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Storage", "StringValue", core.NULL, "None", &core.PoleCheckerStringValue{}, true, true, "Имя хранилища в котором хранится")
 	core.InitAddBaseConfiguration("Storage", conf)
 }
 func initDefaultStorageConfiguration() {

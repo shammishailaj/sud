@@ -24,6 +24,12 @@ func (conf *Configuration) GetCallInfo(CallName string) (ICallInfo, error) {
 	}
 	return nil, errors.New("call not found: " + CallName)
 }
+func (conf *Configuration) GetTypeInfo(DocumentType string) (ITypeInfo, error) {
+	if m, ok := conf.typesInfo[DocumentType]; ok {
+		return m, nil
+	}
+	return nil, errors.New("type not found: " + DocumentType)
+}
 func (conf *Configuration) GetPoleInfo(DocumentType string, PoleName string) (IPoleInfo, error) {
 	if m, ok := conf.polesInfo[DocumentType]; ok {
 		if pi, ok := m[PoleName]; ok {
@@ -91,7 +97,7 @@ func (conf *Configuration) AddPole(ConfigurationName string, DocumentType string
 		PoleType:          PoleType,
 		Default:           Default,
 		IndexType:         IndexType,
-		Checker:           &PoleCheckerStringValue{},
+		Checker:           Checker,
 		New:               New,
 		Edit:              Edit,
 		Title:             Title,

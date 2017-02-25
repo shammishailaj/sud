@@ -3,10 +3,9 @@ package core
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
-func (core *Core) addColumn(tx IQuery, info *PoleTableInfo) error {
+func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
 	var err error
 	PoleDBType := ""
 	var Q2 string = ""
@@ -31,12 +30,10 @@ func (core *Core) addColumn(tx IQuery, info *PoleTableInfo) error {
 		return errors.New("pole type error")
 	}
 	if _, err = tx.Exec(`ALTER TABLE "` + info.TableName + `" ADD "` + info.PoleName + `" ` + PoleDBType); err != nil {
-		fmt.Println(err)
 		return err
 	}
 	if Q2 != "" {
 		if _, err = tx.Exec(Q2); err != nil {
-			fmt.Println(err)
 			return err
 		}
 	}

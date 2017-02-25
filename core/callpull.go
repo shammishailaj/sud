@@ -1,17 +1,21 @@
 package core
 
-import "time"
-import "errors"
+import (
+	"errors"
+	"time"
 
-type FCall func(core *Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error)
+	"github.com/crazyprograms/callpull"
+)
+
+type FCall func(core *Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error)
 type LocalCallPull struct {
 	core  *Core
 	calls map[string]FCall
 }
 
-func (cp *LocalCallPull) Call(Name string, Param map[string]interface{}, timeOutWait time.Duration) (interface{}, error) {
+func (cp *LocalCallPull) Call(Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
 	if _, ok := cp.calls[Name]; !ok {
-		return nil, errors.New("call " + Name + " not exists")
+		return callpull.Result{Result: nil}, errors.New("call " + Name + " not exists")
 	}
 	return cp.calls[Name](cp.core, Name, Param, timeOutWait)
 }

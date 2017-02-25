@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -98,7 +97,6 @@ func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, e
 					return err
 				}
 			}
-			fmt.Println(lconf)
 			depend.PushBack(lconf)
 		}
 		return nil
@@ -194,36 +192,37 @@ func (core *Core) BeginTransaction() (string, error) {
 	core.trancactions[uid] = &transaction{tx: tx, core: core}
 	return uid, nil
 }
-func (core *Core) RollbackTransaction(TransactionUID string) {
+func (core *Core) RollbackTransaction(TransactionUID string) error {
 	core.lockTrancactions.Lock()
 	defer core.lockTrancactions.Unlock()
 	t, ok := core.trancactions[TransactionUID]
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return
+		return errors.New("transaction not found")
 	}
 	err := t.tx.Rollback()
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }
-func (core *Core) CommitTransaction(TransactionUID string) {
+func (core *Core) CommitTransaction(TransactionUID string) error {
 	core.lockTrancactions.Lock()
 	defer core.lockTrancactions.Unlock()
 	t, ok := core.trancactions[TransactionUID]
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return
+		return errors.New("transaction not found")
 	}
 	err := t.tx.Commit()
 	if err != nil {
 		log.Println(err)
 	}
+	return err
 }
-
-func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, errResult error) {
+func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, errResult error) {
 	var err error
 	var ok bool
 	var config *Configuration
@@ -241,21 +240,45 @@ func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time
 	}
 	return listenpull.Listen(Name, TimeoutWait)
 }
-func (core *Core) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration) (interface{}, error) {
+func (core *Core) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
 	var err error
 	var ok bool
 	var config *Configuration
 	var callinfo ICallInfo
 	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
-		return nil, err
+		return callpull.Result{Result: nil}, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
-		return nil, err
+		return callpull.Result{Result: nil}, err
 	}
 	pullName := callinfo.GetPullName()
-	var callpull ICallPull
-	if callpull, ok = core.callpulls[pullName]; !ok {
-		return nil, errors.New("call pull not found: " + pullName)
+	var cp ICallPull
+	if cp, ok = core.callpulls[pullName]; !ok {
+		return callpull.Result{Result: nil}, errors.New("call pull not found: " + pullName)
 	}
-	return callpull.Call(Name, Params, TimeoutWait)
+	return cp.Call(Name, Params, TimeoutWait)
+}
+func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return nil, err
+	}
+	return tx.GetDocumentsPoles(ConfigurationName, DocumentType, poles, wheres)
+}
+func (core *Core) SetDocumentPoles(TransactionUID string, ConfigurationName string, DocumentUID string, poles map[string]interface{}) error {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return err
+	}
+	return tx.SetDocumentPoles(ConfigurationName, DocumentUID, poles)
+}
+func (core *Core) NewDocument(TransactionUID string, ConfigurationName string, DocumentType string, Poles map[string]interface{}) (string, error) {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return "", err
+	}
+	return tx.NewDocument(ConfigurationName, DocumentType, Poles)
 }

@@ -1,11 +1,14 @@
 package main
 
 import (
+	"reflect"
 	"time"
 
 	"fmt"
 
 	"github.com/crazyprograms/sud/core"
+	/* "github.com/crazyprograms/sud/httpserver" */
+	"github.com/crazyprograms/sud/storage"
 	_ "github.com/crazyprograms/sud/test"
 )
 
@@ -27,13 +30,8 @@ type B struct {
 	Value2 string
 }
 
-func main() {
+func checkTest(c *core.Core) {
 	var err error
-	var c *core.Core
-	if c, err = core.NewCore("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
-		fmt.Println(err)
-	}
-	//client := c.NewClient("Test", "Test", "Configuration")
 	var tid string
 	if tid, err = c.BeginTransaction(); err != nil {
 		fmt.Println(err)
@@ -41,9 +39,70 @@ func main() {
 	defer c.RollbackTransaction(tid)
 	fmt.Println(c.CheckConfiguration(tid, "Configuration"))
 	fmt.Println(c.CheckConfiguration(tid, "Document"))
-	c.NewClient("Test", "Test", "FileStorage")
+	fmt.Println(c.CheckConfiguration(tid, "Storage"))
+	c.CommitTransaction(tid)
+}
+func storageNode(c *core.Core) {
+	client := c.NewClient("Test", "Test", "Storage.Default")
+	storage := storage.StartStorage("Default", client, "D:/SUDStorage")
+	fmt.Println(storage)
+}
+func sq() string {
+	return "ABC"
+}
+func sh(a core.Object) {
+	s1, ok1 := a.(string)
+	s2, ok2 := a.(*string)
+	fmt.Println(a, s1, ok1, s2, ok2)
 
-	go func() {
+}
+
+type i1 interface {
+	Check(value interface{})
+}
+type st1 struct {
+}
+
+func (s *st1) Check(value interface{}) {
+	s1, ok1 := value.(string)
+	fmt.Println(value, s1, ok1)
+	t := reflect.TypeOf(value)
+	fmt.Println(t.Name())
+
+}
+func main() {
+	s1 := sq()
+	st := st1{}
+	Poles := map[string]interface{}{"A": s1}
+	for pole, value := range Poles {
+		fmt.Println(pole)
+		st.Check(value)
+	}
+
+	var err error
+	var c *core.Core
+	if c, err = core.NewCore("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
+		fmt.Println(err)
+	}
+	/*server := httpserver.NewServer(c, ":8080")
+	server.Start()
+	fmt.Println("end")
+	return*/
+
+	checkTest(c)
+	storageNode(c)
+	var tid string
+	if tid, err = c.BeginTransaction(); err != nil {
+		fmt.Println(err)
+	}
+	defer c.RollbackTransaction(tid)
+
+	Result, err := c.Call("Storage", "Storage.SetStream", map[string]interface{}{"Storage": "Default", "Stream": ([]byte)("Stream1"), "TransactionUID": tid}, time.Second*1000)
+	fmt.Println("Set Stream", Result, err)
+	c.CommitTransaction(tid)
+
+	time.Sleep(time.Second * 2)
+	/*go func() {
 		defer fmt.Println("end")
 		for {
 			_, Result, err := c.Listen("Test", "TestAsync", time.Second)

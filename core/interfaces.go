@@ -2,37 +2,22 @@ package core
 
 import (
 	"database/sql/driver"
-	"encoding/hex"
 	"time"
 
 	"errors"
 
+	"github.com/crazyprograms/callpull"
 	uuid "github.com/satori/go.uuid"
 )
 
-type UUID []byte
+type UUID struct {
+	uuid.UUID
+}
 
 func NewUUID() UUID {
-	return uuid.NewV4().Bytes()
+	return UUID{UUID: uuid.NewV4()}
 }
-func (u UUID) String() string {
-	if u == nil {
-		return "00000000-0000-0000-0000-000000000000"
-	}
-	const dash byte = '-'
-	buf := make([]byte, 36)
-	hex.Encode(buf[0:8], u[0:4])
-	buf[8] = dash
-	hex.Encode(buf[9:13], u[4:6])
-	buf[13] = dash
-	hex.Encode(buf[14:18], u[6:8])
-	buf[18] = dash
-	hex.Encode(buf[19:23], u[8:10])
-	buf[23] = dash
-	hex.Encode(buf[24:], u[10:])
-	return string(buf)
-}
-func (u UUID) Value() (driver.Value, error) {
+func (u *UUID) Value() (driver.Value, error) {
 	if u == nil {
 		return nil, nil
 	}
@@ -41,24 +26,20 @@ func (u UUID) Value() (driver.Value, error) {
 func (u *UUID) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if ok && len(bytes) == 16 {
-		*u = bytes
+		u.UnmarshalBinary(bytes)
 		return nil
 	}
 	strings, ok := value.(string)
 	if ok {
-		if uuid, err := uuid.FromString(strings); err == nil {
-			*u = uuid.Bytes()
-			return nil
-		} else {
+		if err := u.UnmarshalText(([]byte)(strings)); err != nil {
 			return err
 		}
 	}
 	return errors.New("convert error UUID")
-
 }
 
 type IPoleChecker interface {
-	CheckPoleValue(Value Object) error
+	CheckPoleValue(Value interface{}) error
 	Load(doc IDocument)
 }
 type IDocument interface {
@@ -111,10 +92,10 @@ type ICallInfo interface {
 }
 
 type ICallPull interface {
-	Call(Name string, Param map[string]interface{}, timeoutWait time.Duration) (interface{}, error)
+	Call(Name string, Param map[string]interface{}, timeoutWait time.Duration) (callpull.Result, error)
 }
 type IListenPull interface {
-	Listen(Name string, timeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, err error)
+	Listen(Name string, timeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, err error)
 }
 type ICallListenPull interface {
 	ICallPull
@@ -125,11 +106,12 @@ type IDocumentWhere interface {
 
 type IClient interface {
 	GetConfiguration() string
-	BeginTransaction() string
-	CommitTransaction(TransactionUID string)
-	RollbackTransaction(TransactionUID string)
-	Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan interface{}, errResult error)
-	Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (interface{}, error)
+	BeginTransaction() (string, error)
+	CommitTransaction(TransactionUID string) error
+	RollbackTransaction(TransactionUID string) error
+	Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, errResult error)
+	Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error)
 	GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error)
-	SetDocumentPoles(TransactionUID string, DocumentType string, DocumentUID string, poles map[string]interface{}) error
+	NewDocument(TransactionUID string, DocumentType string, poles map[string]interface{}) (string, error)
+	SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error
 }
