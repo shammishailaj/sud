@@ -1,9 +1,11 @@
 package core
 
 import (
+	"errors"
 	"time"
 
 	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/client"
 	_ "github.com/lib/pq"
 )
 
@@ -14,13 +16,16 @@ type Client struct {
 	transactions      map[string]bool
 }
 
-func (core *Core) NewClient(Login string, Password string, ConfigurationName string) *Client {
+func (core *Core) NewClient(Login string, Password string, ConfigurationName string) (*Client, error) {
 	user := core.getUser(Login)
+	if user == nil {
+		return nil, errors.New("Login error")
+	}
 	if !user.GetCheckPassword(Password) {
-		return nil
+		return nil, errors.New("Login error")
 	}
 	//configuration := core.LoadConfiguration(ConfigurationName)
-	return &Client{user: user, configurationName: ConfigurationName, transactions: map[string]bool{}, core: core}
+	return &Client{user: user, configurationName: ConfigurationName, transactions: map[string]bool{}, core: core}, nil
 }
 
 func (client *Client) GetConfiguration() string { return client.configurationName }
@@ -46,7 +51,7 @@ func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[
 func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
 	return client.core.Call(client.configurationName, Name, Params, TimeoutWait)
 }
-func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []client.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	return client.core.GetDocumentsPoles(TransactionUID, client.configurationName, DocumentType, poles, wheres)
 }
 func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/client"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -258,7 +259,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	}
 	return cp.Call(Name, Params, TimeoutWait)
 }
-func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []client.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {

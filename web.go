@@ -1,13 +1,14 @@
 package main
 
 import (
-	"reflect"
 	"time"
 
 	"fmt"
 
+	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/core"
-	/* "github.com/crazyprograms/sud/httpserver" */
+
+	"github.com/crazyprograms/sud/httpserver"
 	"github.com/crazyprograms/sud/storage"
 	_ "github.com/crazyprograms/sud/test"
 )
@@ -42,66 +43,57 @@ func checkTest(c *core.Core) {
 	fmt.Println(c.CheckConfiguration(tid, "Storage"))
 	c.CommitTransaction(tid)
 }
-func storageNode(c *core.Core) {
-	client := c.NewClient("Test", "Test", "Storage.Default")
+func storageNode() {
+	var err error
+	var client client.IClient
+	if client, err = httpserver.NewClient("http://localhost:8080", "Test", "Test", "Storage.Default"); err != nil {
+		return
+	}
+	//client := c.NewClient("Test", "Test", "Storage.Default")
 	storage := storage.StartStorage("Default", client, "D:/SUDStorage")
 	fmt.Println(storage)
-}
-func sq() string {
-	return "ABC"
-}
-func sh(a core.Object) {
-	s1, ok1 := a.(string)
-	s2, ok2 := a.(*string)
-	fmt.Println(a, s1, ok1, s2, ok2)
 
 }
 
-type i1 interface {
-	Check(value interface{})
-}
-type st1 struct {
-}
-
-func (s *st1) Check(value interface{}) {
-	s1, ok1 := value.(string)
-	fmt.Println(value, s1, ok1)
-	t := reflect.TypeOf(value)
-	fmt.Println(t.Name())
-
-}
-func main() {
-	s1 := sq()
-	st := st1{}
-	Poles := map[string]interface{}{"A": s1}
-	for pole, value := range Poles {
-		fmt.Println(pole)
-		st.Check(value)
-	}
-
+func StartServer() {
 	var err error
 	var c *core.Core
 	if c, err = core.NewCore("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
 		fmt.Println(err)
 	}
-	/*server := httpserver.NewServer(c, ":8080")
-	server.Start()
-	fmt.Println("end")
-	return*/
-
 	checkTest(c)
-	storageNode(c)
+	server := httpserver.NewServer(c, ":8080")
+	server.Start()
+}
+func StartClient() {
+	var err error
 	var tid string
-	if tid, err = c.BeginTransaction(); err != nil {
+	var client client.IClient
+	if client, err = httpserver.NewClient("http://localhost:8080", "Test", "Test", "Storage"); err != nil {
+		return
+	}
+	if tid, err = client.BeginTransaction(); err != nil {
 		fmt.Println(err)
 	}
-	defer c.RollbackTransaction(tid)
-
-	Result, err := c.Call("Storage", "Storage.SetStream", map[string]interface{}{"Storage": "Default", "Stream": ([]byte)("Stream1"), "TransactionUID": tid}, time.Second*1000)
+	defer client.RollbackTransaction(tid)
+	Result, err := client.Call(
+		"Storage.SetStream",
+		map[string]interface{}{
+			"Storage":        "Default",
+			"Stream":         ([]byte)("Stream1"),
+			"TransactionUID": tid},
+		time.Second*1000)
+	//Result, err := c.Call("Storage", "Storage.SetStream", map[string]interface{}{"Storage": "Default", "Stream": ([]byte)("Stream1"), "TransactionUID": tid}, time.Second*1000)
 	fmt.Println("Set Stream", Result, err)
-	c.CommitTransaction(tid)
+	client.CommitTransaction(tid)
+}
+func main() {
 
-	time.Sleep(time.Second * 2)
+	//var err error
+	go StartServer()
+	go storageNode()
+	go StartClient()
+	time.Sleep(time.Second * 20000)
 	/*go func() {
 		defer fmt.Println("end")
 		for {

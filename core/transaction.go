@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+
+	"github.com/crazyprograms/sud/client"
 )
 
 type transaction struct {
@@ -30,7 +32,7 @@ func (t *transaction) Query(query string, args ...interface{}) (*sql.Rows, error
 func (t *transaction) QueryRow(query string, args ...interface{}) *sql.Row {
 	return t.tx.QueryRow(query, args...)
 }
-func (tx *transaction) GetDocumentsPoles(ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (tx *transaction) GetDocumentsPoles(ConfigurationName string, DocumentType string, poles []string, wheres []client.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	var config *Configuration
 	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {

@@ -3,6 +3,8 @@ package core
 import (
 	"errors"
 	"strconv"
+
+	"github.com/crazyprograms/sud/client"
 )
 
 func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereLimit, tx *transaction) error {
@@ -109,7 +111,7 @@ func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *que
 	}
 	return nil
 }
-func processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []IDocumentWhere, tx *transaction) error {
+func processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []client.IDocumentWhere, tx *transaction) error {
 	for _, where := range wheres {
 		switch w := where.(type) {
 		case DocumentWhereLimit:

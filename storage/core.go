@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/core"
 	"github.com/crazyprograms/sud/sortex"
 )
@@ -36,7 +37,7 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 		}
 	}
 	var docs map[string]map[string]interface{}
-	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []core.IDocumentWhere{&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
+	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []client.IDocumentWhere{&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
 		return callpull.Result{Result: nil, Error: err}, nil
 	}
 	if len(docs) == 0 {
