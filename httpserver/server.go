@@ -79,7 +79,6 @@ func (server *Server) getHandler(URL string) (fHandler, string) {
 }
 func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	RequestURI := strings.SplitN(r.RequestURI, "?", 2)
-	fmt.Println("in:", RequestURI[0])
 	if h, URL := server.getHandler(RequestURI[0]); h != nil {
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, URL)
 		session := server.getSession(w, r)
@@ -90,16 +89,6 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		server.errorHandler(w, r, errors.New("http404"))
 	}
-	fmt.Println("out:", RequestURI[0])
-	//	fmt.Fprintln(w, r.Host, r.Method, r.RequestURI)
-
-	/*//var err error
-
-
-	if session != nil {
-		err = errors.New("session end")
-	}*/
-
 }
 func (server *Server) stopSession(SessionID string) {
 	server.sessionsLock.Lock()
@@ -158,7 +147,11 @@ func httpJson(InParamType reflect.Type, Handler JsonHandler, HandlerError JsonHa
 		var outBuff []byte
 		if _, err = inBuff.ReadFrom(request.Body); err == nil {
 			var RecvParam interface{}
-			RecvParam = reflect.New(InParamType).Interface()
+			if InParamType != nil {
+				RecvParam = reflect.New(InParamType).Interface()
+			} else {
+				RecvParam = &struct{}{}
+			}
 			if err = json.Unmarshal(inBuff.Bytes(), RecvParam); err == nil {
 				result, err := Handler(w, request, RecvParam, session)
 				if err != nil {
@@ -177,55 +170,6 @@ func httpJson(InParamType reflect.Type, Handler JsonHandler, HandlerError JsonHa
 		return err
 	}
 }
-func (server *Server) httpJsonSend(w http.ResponseWriter, result interface{}) error {
-	var b []byte
-	var err error
-	if b, err = json.Marshal(result); err != nil {
-		http.Error(w, err.Error(), 500)
-		return err
-	}
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Println(string(b))
-	if _, err = w.Write(b); err != nil {
-		return err
-	}
-	return nil
-}
-func (server *Server) httpJsonLogin(w http.ResponseWriter, r *http.Request, session *Session) error {
-	session.lock.Lock()
-	defer session.lock.Unlock()
-	var err error
-	if session == nil {
-		err = errors.New("session not found")
-		http.Error(w, err.Error(), 403)
-		return err
-	}
-
-	var b bytes.Buffer
-	var result jsonLoginResult
-	if _, err = b.ReadFrom(r.Body); err == nil {
-		var j jsonLogin
-		if err = json.Unmarshal(b.Bytes(), &j); err == nil {
-			if j.Login == "" || j.Password == "" || j.ConfigurationName == "" {
-				err = errors.New("param error")
-			} else if session.client == nil {
-				if session.client, err = server.core.NewClient(j.Login, j.Password, j.ConfigurationName); err == nil {
-					session.auth = true
-					result.Login = true
-				} else {
-					session.auth = false
-				}
-			} else {
-				result.Login = true
-				err = errors.New("Already login")
-			}
-		}
-	}
-	if err != nil {
-		result.Error = err.Error()
-	}
-	return server.httpJsonSend(w, result)
-}
 func (session *Session) setResult(result chan callpull.Result) string {
 	session.lockResult.Lock()
 	defer session.lockResult.Unlock()
@@ -242,70 +186,106 @@ func (session *Session) getResult(resultUID string) chan callpull.Result {
 	}
 	return nil
 }
-
-func (server *Server) httpJsonBeginTransaction(w http.ResponseWriter, r *http.Request, session *Session) error {
-	session.lock.RLock()
-	defer session.lock.RUnlock()
-	var err error
-	if session == nil {
-		err = errors.New("session not found")
-		http.Error(w, err.Error(), 403)
-		return err
-	}
-	if !session.auth {
-		err = errors.New("not login")
-		http.Error(w, err.Error(), 403)
-		return err
-	}
-	var result jsonBeginTransactionResult
-	var TransactionUID string
-	TransactionUID, err = session.client.BeginTransaction()
-	result.TransactionUID = TransactionUID
-	if err != nil {
-		result.Error = err.Error()
-	}
-	return server.httpJsonSend(w, result)
-}
-
-func (server *Server) httpJsonCall(w http.ResponseWriter, r *http.Request, session *Session) error {
-	session.lock.RLock()
-	defer session.lock.RUnlock()
-	var err error
-	if session == nil {
-		err = errors.New("session not found")
-		http.Error(w, err.Error(), 403)
-		return err
-	}
-	if !session.auth {
-		err = errors.New("not login")
-		http.Error(w, err.Error(), 403)
-		return err
-	}
-	var b bytes.Buffer
-	var result jsonCallResult
-	if _, err = b.ReadFrom(r.Body); err == nil {
-		var j jsonCall
-		if err = json.Unmarshal(b.Bytes(), &j); err == nil {
-			if Params, err := jsonUnPackMap(*j.Params); err == nil {
-				var r1 callpull.Result
-				if r1, err = session.client.Call(j.Name, Params, time.Duration(j.TimeoutWait)*time.Millisecond); err == nil {
-					if result.Result, err = jsonPack(r1.Result); err == nil {
-						result.Error = r1.Error.Error()
-					}
-				}
-			}
-		}
-	}
-	if err != nil {
-		result.Error = err.Error()
-	}
-	return server.httpJsonSend(w, result)
-}
 func (server *Server) Start() {
 	http.ListenAndServe(server.address, server)
 }
 func (server *Server) jsonError(w http.ResponseWriter, r *http.Request, err error) interface{} {
 	return &jsonErrorReturn{Error: err.Error()}
+}
+func (server *Server) jsonLogin(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	var err error
+	InParam := In.(*jsonLogin)
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if InParam.Login == "" || InParam.Password == "" || InParam.ConfigurationName == "" {
+		return nil, errors.New("param error")
+	}
+	if session.client != nil {
+		return nil, errors.New("Already login")
+	}
+	if session.client, err = server.core.NewClient(InParam.Login, InParam.Password, InParam.ConfigurationName); err != nil {
+		session.auth = false
+		return nil, err
+	}
+	session.auth = true
+	return jsonLoginResult{Login: true}, nil
+}
+func (server *Server) jsonCall(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	var err error
+	InParam := In.(*jsonCall)
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	var Params map[string]interface{}
+	if Params, err = jsonUnPackMap(*InParam.Params); err != nil {
+		return nil, err
+	}
+	var r1 callpull.Result
+	if r1, err = session.client.Call(InParam.Name, Params, time.Duration(InParam.TimeoutWait)*time.Millisecond); err != nil {
+		return nil, err
+	}
+	if r1.Error != nil {
+		return nil, r1.Error
+	}
+	var Result *jsonParam
+	if Result, err = jsonPack(r1.Result); err != nil {
+		return nil, err
+	}
+	return jsonCallResult{Result: Result}, nil
+}
+func (server *Server) jsonBegin(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	var err error
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	var TransactionUID string
+	if TransactionUID, err = session.client.BeginTransaction(); err != nil {
+		return nil, err
+	}
+	return jsonBeginTransactionResult{TransactionUID: TransactionUID}, nil
+}
+func (server *Server) jsonCommit(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	InParam := In.(*jsonCommitTransaction)
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	if InParam.TransactionUID == "" {
+		return nil, errors.New("param error")
+	}
+	return jsonCommitTransactionResult{}, session.client.CommitTransaction(InParam.TransactionUID)
+}
+func (server *Server) jsonRollback(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	InParam := In.(*jsonRollbackTransaction)
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	if InParam.TransactionUID == "" {
+		return nil, errors.New("param error")
+	}
+	return jsonRollbackTransactionResult{}, session.client.RollbackTransaction(InParam.TransactionUID)
 }
 func (server *Server) jsonListen(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	InParam := In.(*jsonListen)
@@ -373,36 +353,6 @@ func (server *Server) jsonListenResult(w http.ResponseWriter, request *http.Requ
 	ResultChan <- r
 	return &jsonListenReturnResult{}, nil
 }
-func (server *Server) jsonCommit(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
-	InParam := In.(*jsonCommitTransaction)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
-	if session == nil {
-		return nil, errors.New("session not found")
-	}
-	if !session.auth {
-		return nil, errors.New("not login")
-	}
-	if InParam.TransactionUID == "" {
-		return nil, errors.New("param error")
-	}
-	return jsonCommitTransactionResult{}, session.client.CommitTransaction(InParam.TransactionUID)
-}
-func (server *Server) jsonRollback(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
-	InParam := In.(*jsonRollbackTransaction)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
-	if session == nil {
-		return nil, errors.New("session not found")
-	}
-	if !session.auth {
-		return nil, errors.New("not login")
-	}
-	if InParam.TransactionUID == "" {
-		return nil, errors.New("param error")
-	}
-	return jsonRollbackTransactionResult{}, session.client.RollbackTransaction(InParam.TransactionUID)
-}
 func NewServer(c *core.Core, Address string) *Server {
 	s := &Server{
 		core:              c,
@@ -412,18 +362,13 @@ func NewServer(c *core.Core, Address string) *Server {
 		sessionCookieName: "SessionID",
 		ticTimeOut:        time.Millisecond * 1000 * 30,
 		ticCount:          100}
-	s.handlers["/json/login"] = s.httpJsonLogin
-	//s.handlers["/json/listen"] = s.httpJsonListen
+	s.handlers["/json/login"] = httpJson(reflect.TypeOf(jsonLogin{}), s.jsonLogin, s.jsonError)
 	s.handlers["/json/listen"] = httpJson(reflect.TypeOf(jsonListen{}), s.jsonListen, s.jsonError)
 	s.handlers["/json/listenreturn"] = httpJson(reflect.TypeOf(jsonListenReturn{}), s.jsonListenResult, s.jsonError)
-	//s.handlers["/json/listenreturn"] = s.httpJsonListenReturn
-	s.handlers["/json/begin"] = s.httpJsonBeginTransaction
+	s.handlers["/json/begin"] = httpJson(nil, s.jsonBegin, s.jsonError)
 	s.handlers["/json/commit"] = httpJson(reflect.TypeOf(jsonCommitTransaction{}), s.jsonCommit, s.jsonError)
 	s.handlers["/json/rollback"] = httpJson(reflect.TypeOf(jsonRollbackTransaction{}), s.jsonRollback, s.jsonError)
-
-	//s.handlers["/json/commit"] = s.httpJsonCommitTransaction
-	//s.handlers["/json/rollback"] = s.httpJsonRollbackTransaction
-	s.handlers["/json/call"] = s.httpJsonCall
+	s.handlers["/json/call"] = httpJson(reflect.TypeOf(jsonCall{}), s.jsonCall, s.jsonError)
 
 	staticFile := http.FileServer(http.Dir("./static/"))
 	s.handlers["/"] = func(w http.ResponseWriter, request *http.Request, session *Session) error {
