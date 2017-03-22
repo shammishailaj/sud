@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+type jsonErrorReturn struct {
+	Error string `json:"error,omitempty"`
+}
 type jsonLogin struct {
 	Login             string `json:"login"`
 	Password          string `json:"password"`
@@ -45,8 +48,7 @@ type jsonCommitTransaction struct {
 }
 
 type jsonCommitTransactionResult struct {
-	Commit bool   `json:"commit"`
-	Error  string `json:"error,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type jsonRollbackTransaction struct {
@@ -54,8 +56,7 @@ type jsonRollbackTransaction struct {
 }
 
 type jsonRollbackTransactionResult struct {
-	Rollback bool   `json:"rollback"`
-	Error    string `json:"error,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type jsonCall struct {
@@ -66,6 +67,14 @@ type jsonCall struct {
 type jsonCallResult struct {
 	Result *jsonParam `json:"result"`
 	Error  string     `json:"error,omitempty"`
+}
+type jsonSetDocumentPoles struct {
+	TransactionUID string                 `json:"transactionUID"`
+	DocumentUID    string                 `json:"documentUID"`
+	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
+}
+type jsonSetDocumentPolesResult struct {
+	Error string `json:"error,omitempty"`
 }
 type jsonParam struct {
 	String *string                `json:"string,omitempty"`

@@ -84,10 +84,12 @@ func (client *Client) CommitTransaction(TransactionUID string) error {
 		if _, err = b.ReadFrom(r.Body); err == nil {
 			var result jsonCommitTransactionResult
 			fmt.Println("recv:", string(b.Bytes()))
-			if err = json.Unmarshal(b.Bytes(), &result); result.Commit {
-				return nil
+			if err = json.Unmarshal(b.Bytes(), &result); err == nil {
+				if result.Error == "" {
+					return nil
+				}
+				err = errors.New(result.Error)
 			}
-			err = errors.New(result.Error)
 		}
 	}
 	return err
@@ -105,10 +107,13 @@ func (client *Client) RollbackTransaction(TransactionUID string) error {
 		if _, err = b.ReadFrom(r.Body); err == nil {
 			var result jsonRollbackTransactionResult
 			fmt.Println("recv:", string(b.Bytes()))
-			if err = json.Unmarshal(b.Bytes(), &result); result.Rollback {
-				return nil
+			if err = json.Unmarshal(b.Bytes(), &result); err == nil {
+				if result.Error == "" {
+					return nil
+				}
+				err = errors.New(result.Error)
 			}
-			err = errors.New(result.Error)
+
 		}
 	}
 	return err
@@ -206,7 +211,7 @@ func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWa
 			return r, nil
 		}
 	}
-	return callpull.Result{}, nil
+	return callpull.Result{}, err
 }
 func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []client.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	return nil, nil
@@ -215,7 +220,32 @@ func (client *Client) NewDocument(TransactionUID string, DocumentType string, po
 	return "", nil
 }
 func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {
-	return nil
+	var err error
+	var r *http.Response
+	var m map[string]*jsonParam
+	if m, err = jsonPackMap(poles); err != nil {
+		return err
+	}
+	j := jsonSetDocumentPoles{TransactionUID: TransactionUID, DocumentUID: DocumentUID, Poles: &m}
+	var data []byte
+	if data, err = json.Marshal(&j); err == nil {
+		if r, err = client.http.Post(client.url+"/json/setdocument", "application/json", bytes.NewReader(data)); err != nil {
+			return err
+		}
+		var b bytes.Buffer
+		if _, err = b.ReadFrom(r.Body); err == nil {
+			var result jsonSetDocumentPolesResult
+			fmt.Println("recv:", string(b.Bytes()))
+			if err = json.Unmarshal(b.Bytes(), &result); err != nil {
+				return err
+			}
+			if result.Error != "" {
+				return errors.New(result.Error)
+			}
+			return nil
+		}
+	}
+	return err
 }
 
 var c client.IClient = &Client{}
