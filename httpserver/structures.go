@@ -65,8 +65,9 @@ type jsonCall struct {
 	TimeoutWait int                    `json:"timeoutWait"` //в милесекундах
 }
 type jsonCallResult struct {
-	Result *jsonParam `json:"result"`
-	Error  string     `json:"error,omitempty"`
+	Result        *jsonParam `json:"result"`
+	CallPullError string     `json:"callpullerror,omitempty"`
+	Error         string     `json:"error,omitempty"`
 }
 type jsonSetDocumentPoles struct {
 	TransactionUID string                 `json:"transactionUID"`
@@ -75,6 +76,25 @@ type jsonSetDocumentPoles struct {
 }
 type jsonSetDocumentPolesResult struct {
 	Error string `json:"error,omitempty"`
+}
+type jsonGetDocumentPoles struct {
+	TransactionUID string                  `json:"transactionUID"`
+	DocumentType   string                  `json:"documentType"`
+	Poles          []string                `json:"poles"`
+	Wheres         []map[string]*jsonParam `json:"wheres,omitempty"`
+}
+type jsonGetDocumentPolesResult struct {
+	Documents *map[string]map[string]*jsonParam `json:"documents"`
+	Error     string                            `json:"error,omitempty"`
+}
+type jsonNewDocument struct {
+	TransactionUID string                 `json:"transactionUID"`
+	DocumentType   string                 `json:"documentType"`
+	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
+}
+type jsonNewDocumentResult struct {
+	DocumentUID string `json:"documentUID"`
+	Error       string `json:"error,omitempty"`
 }
 type jsonParam struct {
 	String *string                `json:"string,omitempty"`

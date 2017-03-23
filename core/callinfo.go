@@ -1,5 +1,7 @@
 package core
 
+import "github.com/crazyprograms/sud/corebase"
+
 type CallInfo struct {
 	ConfigurationName string
 	Title             string
@@ -16,4 +18,4 @@ func (ci *CallInfo) GetPullName() string          { return ci.PullName }
 func (ci *CallInfo) GetCall() bool                { return ci.Call }
 func (ci *CallInfo) GetListen() bool              { return ci.Listen }
 
-var _ci ICallInfo = (ICallInfo)(&CallInfo{})
+var _ci corebase.ICallInfo = (corebase.ICallInfo)(&CallInfo{})

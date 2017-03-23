@@ -18,7 +18,7 @@ import (
 
 	"github.com/crazyprograms/callpull"
 	"github.com/crazyprograms/sud/client"
-	"github.com/crazyprograms/sud/core"
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type Storage struct {
@@ -101,13 +101,13 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 	p := path.Join(storage.root, storageDir, hash[len(hash)-2:], hash[len(hash)-4:len(hash)-2], hash)
 	var docs map[string]map[string]interface{}
 
-	if docs, err = storage.client.GetDocumentsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []client.IDocumentWhere{
-		&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
+	if docs, err = storage.client.GetDocumentsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IDocumentWhere{
+		&corebase.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
 	}); err != nil {
 		return "", err
 	}
 	for _, Poles := range docs {
-		if !core.IsNull(Poles["Storage.Stream.Storage"]) && Poles["Storage.Stream.Storage"].(string) == storage.name {
+		if !corebase.IsNull(Poles["Storage.Stream.Storage"]) && Poles["Storage.Stream.Storage"].(string) == storage.name {
 			return hash, nil
 		}
 	}

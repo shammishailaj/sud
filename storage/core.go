@@ -6,8 +6,8 @@ import (
 	"errors"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/core"
+	"github.com/crazyprograms/sud/corebase"
 	"github.com/crazyprograms/sud/sortex"
 )
 
@@ -37,7 +37,7 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 		}
 	}
 	var docs map[string]map[string]interface{}
-	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []client.IDocumentWhere{&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
+	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IDocumentWhere{&corebase.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
 		return callpull.Result{Result: nil, Error: err}, nil
 	}
 	if len(docs) == 0 {
@@ -93,10 +93,10 @@ func initConfiguration() {
 	conf.AddCall("Storage", "Storage.SetStream", "std", true, false, "")
 
 	conf.AddType("Storage", "Storage.Stream", true, true, true, "Поток")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Hash", "StringValue", core.NULL, "Unique", &core.PoleCheckerStringValue{}, true, true, "Хеш потока")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Size", "Int64Value", core.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Размер в байтах")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Priority", "Int64Value", core.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Приоритет")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Storage", "StringValue", core.NULL, "None", &core.PoleCheckerStringValue{}, true, true, "Имя хранилища в котором хранится")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Hash", "StringValue", corebase.NULL, "Unique", &core.PoleCheckerStringValue{}, true, true, "Хеш потока")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Size", "Int64Value", corebase.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Размер в байтах")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Priority", "Int64Value", corebase.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Приоритет")
+	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Storage", "StringValue", corebase.NULL, "None", &core.PoleCheckerStringValue{}, true, true, "Имя хранилища в котором хранится")
 	core.InitAddBaseConfiguration("Storage", conf)
 }
 func initDefaultStorageConfiguration() {

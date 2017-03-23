@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/client"
+	"github.com/crazyprograms/sud/corebase"
 	_ "github.com/lib/pq"
 )
 
@@ -51,7 +51,7 @@ func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[
 func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
 	return client.core.Call(client.configurationName, Name, Params, TimeoutWait)
 }
-func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []client.IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	return client.core.GetDocumentsPoles(TransactionUID, client.configurationName, DocumentType, poles, wheres)
 }
 func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {
