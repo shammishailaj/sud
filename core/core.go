@@ -200,7 +200,7 @@ func (core *Core) RollbackTransaction(TransactionUID string) error {
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return errors.New("transaction not found")
+		return errors.New("rollback transaction not found")
 	}
 	err := t.tx.Rollback()
 	if err != nil {

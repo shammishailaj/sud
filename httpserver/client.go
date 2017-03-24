@@ -13,6 +13,8 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/crazyprograms/callpull"
 	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/corebase"
@@ -51,7 +53,7 @@ func NewClient(url, login, password, configurationName string) (*Client, error) 
 	if jar, err = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List}); err != nil {
 		return nil, err
 	}
-	client := &Client{url: url, jar: jar, http: http.Client{Jar: jar, Timeout}}
+	client := &Client{url: url, jar: jar, http: http.Client{Jar: jar}}
 	result := jsonLoginResult{}
 	if err = client.httpJsonClient("/json/login", jsonLogin{Login: login, Password: login, ConfigurationName: configurationName}, &result); err != nil {
 		return nil, err
@@ -62,8 +64,15 @@ func NewClient(url, login, password, configurationName string) (*Client, error) 
 	return client, nil
 }
 func (client *Client) GetConfiguration() string {
-	return ""
-
+	var err error
+	result := jsonGetConfigurationResult{}
+	if err = client.httpJsonClient("/json/getconfiguration", struct{}{}, &result); err != nil {
+		return ""
+	}
+	if result.Error != "" {
+		return ""
+	}
+	return result.Configuration
 }
 func (client *Client) BeginTransaction() (string, error) {
 	var err error
@@ -160,38 +169,71 @@ func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWa
 	return callpull.Result{Result: Result, Error: callpullError}, nil
 }
 func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
-	return nil, nil
+	var err error
+	w := make([]map[string]*jsonParam, len(wheres), len(wheres))
+	for i, where := range wheres {
+		p := map[string]interface{}{}
+		var WhereType string
+		var Params map[string]interface{}
+		WhereType, Params, err = where.Save()
+		p["whereType"] = WhereType
+		for name, value := range Params {
+			n := strings.Split(name, ".")
+			if n[0] != "DocumentWhere" || n[1] != WhereType {
+				return nil, errors.New("where param name error " + name)
+			}
+			p[strings.ToLower(n[2][0:1])+n[2][1:]] = value
+		}
+		if w[i], err = jsonPackMap(p); err != nil {
+			return nil, err
+		}
+	}
+	result := jsonGetDocumentPolesResult{}
+	if err = client.httpJsonClient("/json/getdocumentpoles", &jsonGetDocumentPoles{TransactionUID: TransactionUID, DocumentType: DocumentType, Poles: poles, Wheres: w}, &result); err != nil {
+		return nil, err
+	}
+	if result.Error != "" {
+		return nil, errors.New(result.Error)
+	}
+	Documents := map[string]map[string]interface{}{}
+	if result.Documents != nil {
+		for DocumentUID, Poles := range *result.Documents {
+			if Documents[DocumentUID], err = jsonUnPackMap(Poles); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return Documents, nil
 }
 func (client *Client) NewDocument(TransactionUID string, DocumentType string, poles map[string]interface{}) (string, error) {
-	return "", nil
+	var err error
+	var m map[string]*jsonParam
+	if m, err = jsonPackMap(poles); err != nil {
+		return "", err
+	}
+	result := jsonNewDocumentResult{}
+	if err = client.httpJsonClient("/json/newdocument", &jsonNewDocument{TransactionUID: TransactionUID, DocumentType: DocumentType, Poles: &m}, &result); err != nil {
+		return "", err
+	}
+	if result.Error != "" {
+		return "", errors.New(result.Error)
+	}
+	return result.DocumentUID, nil
 }
 func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {
 	var err error
-	var r *http.Response
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
 		return err
 	}
-	j := jsonSetDocumentPoles{TransactionUID: TransactionUID, DocumentUID: DocumentUID, Poles: &m}
-	var data []byte
-	if data, err = json.Marshal(&j); err == nil {
-		if r, err = client.http.Post(client.url+"/json/setdocument", "application/json", bytes.NewReader(data)); err != nil {
-			return err
-		}
-		var b bytes.Buffer
-		if _, err = b.ReadFrom(r.Body); err == nil {
-			var result jsonSetDocumentPolesResult
-			fmt.Println("recv:", string(b.Bytes()))
-			if err = json.Unmarshal(b.Bytes(), &result); err != nil {
-				return err
-			}
-			if result.Error != "" {
-				return errors.New(result.Error)
-			}
-			return nil
-		}
+	result := jsonSetDocumentPolesResult{}
+	if err = client.httpJsonClient("/json/setdocumentpoles", &jsonSetDocumentPoles{TransactionUID: TransactionUID, DocumentUID: DocumentUID, Poles: &m}, &result); err != nil {
+		return err
 	}
-	return err
+	if result.Error != "" {
+		return errors.New(result.Error)
+	}
+	return nil
 }
 
 var c client.IClient = &Client{}

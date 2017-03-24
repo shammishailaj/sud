@@ -214,6 +214,17 @@ func (server *Server) jsonLogin(w http.ResponseWriter, r *http.Request, In inter
 	session.auth = true
 	return jsonLoginResult{Login: true}, nil
 }
+func (server *Server) jsonGetConfiguration(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	return jsonGetConfigurationResult{Configuration: session.client.GetConfiguration()}, nil
+}
 func (server *Server) jsonCall(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonCall)
@@ -458,6 +469,7 @@ func NewServer(c *core.Core, Address string) *Server {
 		ticTimeOut:        time.Millisecond * 1000 * 30,
 		ticCount:          100}
 	s.handlers["/json/login"] = httpJsonServer(reflect.TypeOf(jsonLogin{}), s.jsonLogin, s.jsonError)
+	s.handlers["/json/getconfiguration"] = httpJsonServer(nil, s.jsonGetConfiguration, s.jsonError)
 	s.handlers["/json/listen"] = httpJsonServer(reflect.TypeOf(jsonListen{}), s.jsonListen, s.jsonError)
 	s.handlers["/json/listenreturn"] = httpJsonServer(reflect.TypeOf(jsonListenReturn{}), s.jsonListenResult, s.jsonError)
 	s.handlers["/json/begintransaction"] = httpJsonServer(nil, s.jsonBeginTransaction, s.jsonError)
@@ -469,9 +481,6 @@ func NewServer(c *core.Core, Address string) *Server {
 	s.handlers["/json/newdocument"] = httpJsonServer(reflect.TypeOf(jsonNewDocument{}), s.jsonNewDocument, s.jsonError)
 	staticFile := http.FileServer(http.Dir("./static/"))
 	s.handlers["/"] = func(w http.ResponseWriter, request *http.Request, session *Session) error {
-		/*if request.URL.Path == "/" || request.URL.Path == "" {
-			request.URL.Path = "/index.html"
-		}*/
 		staticFile.ServeHTTP(w, request)
 		return nil
 	}

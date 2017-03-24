@@ -20,6 +20,10 @@ type jsonLoginResult struct {
 	Login bool   `json:"login,omitempty"`
 	Error string `json:"error,omitempty"`
 }
+type jsonGetConfigurationResult struct {
+	Configuration string `json:"configuration,omitempty"`
+	Error         string `json:"error,omitempty"`
+}
 
 type jsonListen struct {
 	Name        string `json:"name"`
@@ -66,7 +70,7 @@ type jsonCall struct {
 }
 type jsonCallResult struct {
 	Result        *jsonParam `json:"result"`
-	CallPullError string     `json:"callpullerror,omitempty"`
+	CallPullError string     `json:"callPullError,omitempty"`
 	Error         string     `json:"error,omitempty"`
 }
 type jsonSetDocumentPoles struct {

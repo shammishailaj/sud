@@ -6,8 +6,8 @@ type IPoleChecker interface {
 }
 
 type IDocumentWhere interface {
-	GetDocumentWhereType() string
 	Load(Poles map[string]interface{}) error
+	Save() (string, map[string]interface{}, error)
 }
 
 type ITypeInfo interface {

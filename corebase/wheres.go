@@ -2,6 +2,7 @@ package corebase
 
 import (
 	"errors"
+	"time"
 )
 
 var documentWheres = map[string]func() IDocumentWhere{
@@ -41,7 +42,9 @@ type DocumentWhereContainPole struct {
 	PoleName string
 }
 
-func (w *DocumentWhereContainPole) GetDocumentWhereType() string { return "ContainPole" }
+func (dw *DocumentWhereContainPole) Save() (string, map[string]interface{}, error) {
+	return "ContainPole", map[string]interface{}{"DocumentWhere.ContainPole.PoleName": dw.PoleName}, nil
+}
 
 func (dw *DocumentWhereContainPole) Load(Poles map[string]interface{}) error {
 	var ok bool
@@ -57,7 +60,13 @@ type DocumentWhereNotContainPole struct {
 	TabLock     bool
 }
 
-func (w *DocumentWhereNotContainPole) GetDocumentWhereType() string { return "NotContainPole" }
+func (dw *DocumentWhereNotContainPole) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"DocumentWhere.NotContainPole.PoleName": dw.PoleName, "DocumentWhere.NotContainPole.InTableName": dw.InTableName}
+	if dw.TabLock == true {
+		p["DocumentWhere.NotContainPole.TabLock"] = dw.TabLock
+	}
+	return "NotContainPole", p, nil
+}
 
 func (dw *DocumentWhereNotContainPole) Load(Poles map[string]interface{}) error {
 	var ok bool
@@ -78,7 +87,9 @@ type DocumentWhereLimit struct {
 	Count int64
 }
 
-func (w *DocumentWhereLimit) GetDocumentWhereType() string { return "Limit" }
+func (dw *DocumentWhereLimit) Save() (string, map[string]interface{}, error) {
+	return "Limit", map[string]interface{}{"DocumentWhere.Limit.Skip": dw.Skip, "DocumentWhere.Limit.Count": dw.Count}, nil
+}
 
 func (dw *DocumentWhereLimit) Load(Poles map[string]interface{}) error {
 	dw.Skip = Poles["DocumentWhere.Limit.Skip"].(int64)
@@ -91,7 +102,13 @@ type DocumentWhereOrder struct {
 	ASC      bool
 }
 
-func (w *DocumentWhereOrder) GetDocumentWhereType() string { return "Order" }
+func (dw *DocumentWhereOrder) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"DocumentWhere.Order.PoleName": dw.PoleName}
+	if dw.ASC == true {
+		p["DocumentWhere.Order.ASC"] = "ASC"
+	}
+	return "Order", p, nil
+}
 
 func (dw *DocumentWhereOrder) Load(Poles map[string]interface{}) error {
 	var ok bool
@@ -109,7 +126,9 @@ type DocumentWhereSelectDocument struct {
 	DocumentUID string
 }
 
-func (w *DocumentWhereSelectDocument) GetDocumentWhereType() string { return "SelectDocument" }
+func (dw *DocumentWhereSelectDocument) Save() (string, map[string]interface{}, error) {
+	return "SelectDocument", map[string]interface{}{"DocumentWhere.SelectDocument.DocumentUID": dw.DocumentUID}, nil
+}
 
 func (dw *DocumentWhereSelectDocument) Load(Poles map[string]interface{}) error {
 	var ok bool
@@ -128,7 +147,21 @@ type DocumentWhereCompare struct {
 	Value Object
 }
 
-func (w *DocumentWhereCompare) GetDocumentWhereType() string { return "Compare" }
+func (dw *DocumentWhereCompare) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"DocumentWhere.Compare.PoleName": dw.PoleName, "DocumentWhere.Compare.Operation": dw.Operation}
+	switch v := dw.Value.(type) {
+	case string:
+		p["DocumentWhere.Compare.StringValue"] = v
+	case int64:
+		p["DocumentWhere.Compare.Int64Value"] = v
+	case time.Time:
+		p["DocumentWhere.Compare.DateTimeValue"] = v
+	}
+	if dw.ExtensionName != "" {
+		p["DocumentWhere.Compare.Extension"] = dw.ExtensionName
+	}
+	return "Compare", p, nil
+}
 
 func (dw *DocumentWhereCompare) Load(Poles map[string]interface{}) error {
 	var ok bool
