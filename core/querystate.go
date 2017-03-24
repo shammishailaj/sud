@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type queryState struct {
@@ -30,7 +32,7 @@ func NewQueryState() *queryState {
 	return &queryState{tables: map[string]string{}, polesSQL: make([]string, 0, 10), poles: map[string]*ptiInfo{}, params: make([]interface{}, 0, 10), wheres: make([]string, 0, 10), orders: make([]string, 0, 3)}
 }
 
-func (state *queryState) AddPole(poleName string, pi IPoleInfo) {
+func (state *queryState) AddPole(poleName string, pi corebase.IPoleInfo) {
 	pti := &ptiInfo{}
 	pti.FromPoleInfo(pi)
 	pti.SQL = `"` + pti.TableName + `"."` + pti.PoleName + `"`
@@ -53,8 +55,8 @@ func (state *queryState) AddParam(value interface{}) string {
 	state.params = append(state.params, value)
 	return "$" + strconv.Itoa(len(state.params))
 }
-func (state *queryState) AddParamObject(value Object) (string, error) {
-	if IsNull(value) {
+func (state *queryState) AddParamObject(value corebase.Object) (string, error) {
+	if corebase.IsNull(value) {
 		return state.AddParam(nil), nil
 	}
 	switch v := value.(type) {
@@ -66,7 +68,7 @@ func (state *queryState) AddParamObject(value Object) (string, error) {
 		return state.AddParam(v), nil
 	case time.Time:
 		return state.AddParam(v), nil
-	case UUID:
+	case corebase.UUID:
 		return state.AddParam(v), nil
 	default:
 		return "", errors.New("type not support")
@@ -183,7 +185,7 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 }
 func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](interface{})) error {
 	for poleName, pti := range state.poles {
-		var o Object
+		var o corebase.Object
 		switch pti.PoleInfo.GetPoleType() {
 		case "BooleanValue":
 			v, ok := values[pti.N].(*sql.NullBool)
@@ -191,7 +193,7 @@ func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o = NULL
+				o = corebase.NULL
 			} else {
 				o = v.Bool
 			}
@@ -201,7 +203,7 @@ func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o = NULL
+				o = corebase.NULL
 			} else {
 				o = v.String
 			}
@@ -211,7 +213,7 @@ func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](
 				return errors.New("pole read error " + poleName)
 			}
 			if *v == nil {
-				o = NULL
+				o = corebase.NULL
 			} else {
 				o = *(*v)
 			}
@@ -221,7 +223,7 @@ func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](
 				return errors.New("pole read error " + poleName)
 			}
 			if !v.Valid {
-				o = NULL
+				o = corebase.NULL
 			} else {
 				o = v.Int64
 			}

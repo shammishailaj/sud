@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/corebase"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -118,7 +119,7 @@ func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, e
 		for DocumentType, poleTypeMap := range c.polesInfo {
 			ptm, ok := conf.polesInfo[DocumentType]
 			if !ok {
-				ptm = make(map[string]IPoleInfo)
+				ptm = make(map[string]corebase.IPoleInfo)
 				conf.polesInfo[DocumentType] = ptm
 			}
 			for PoleName, poleInfo := range poleTypeMap {
@@ -199,7 +200,7 @@ func (core *Core) RollbackTransaction(TransactionUID string) error {
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return errors.New("transaction not found")
+		return errors.New("rollback transaction not found")
 	}
 	err := t.tx.Rollback()
 	if err != nil {
@@ -226,7 +227,7 @@ func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time
 	var err error
 	var ok bool
 	var config *Configuration
-	var callinfo ICallInfo
+	var callinfo corebase.ICallInfo
 	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, nil, err
 	}
@@ -244,7 +245,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	var err error
 	var ok bool
 	var config *Configuration
-	var callinfo ICallInfo
+	var callinfo corebase.ICallInfo
 	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
@@ -258,7 +259,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	}
 	return cp.Call(Name, Params, TimeoutWait)
 }
-func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {

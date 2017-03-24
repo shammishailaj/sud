@@ -3,6 +3,8 @@ package core
 import (
 	"errors"
 	"strings"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 const PrefixTable = "t_"
@@ -11,13 +13,13 @@ type PoleTableInfo struct {
 	Configuration string
 	TableName     string
 	PoleName      string
-	PoleInfo      IPoleInfo
+	PoleInfo      corebase.IPoleInfo
 }
 
 func (pti *PoleTableInfo) FullPoleName(TableName string, PoleName string) string {
 	return TableName[len(PrefixTable):] + "." + PoleName
 }
-func (pti *PoleTableInfo) FromPoleInfo(pi IPoleInfo) error {
+func (pti *PoleTableInfo) FromPoleInfo(pi corebase.IPoleInfo) error {
 	pti.Configuration = pi.GetConfigurationName()
 	s := strings.Split(pi.GetPoleName(), ".")
 	s2 := strings.Split(pi.GetDocumentType(), ".")

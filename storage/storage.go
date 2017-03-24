@@ -17,7 +17,8 @@ import (
 	"crypto/sha1"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/core"
+	"github.com/crazyprograms/sud/client"
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type Storage struct {
@@ -27,7 +28,7 @@ type Storage struct {
 	close        bool
 	errGetStream error
 	name         string
-	client       core.IClient
+	client       client.IClient
 }
 
 const tempDir = "tmp"
@@ -100,13 +101,13 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 	p := path.Join(storage.root, storageDir, hash[len(hash)-2:], hash[len(hash)-4:len(hash)-2], hash)
 	var docs map[string]map[string]interface{}
 
-	if docs, err = storage.client.GetDocumentsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []core.IDocumentWhere{
-		&core.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
+	if docs, err = storage.client.GetDocumentsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IDocumentWhere{
+		&corebase.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
 	}); err != nil {
 		return "", err
 	}
 	for _, Poles := range docs {
-		if !core.IsNull(Poles["Storage.Stream.Storage"]) && Poles["Storage.Stream.Storage"].(string) == storage.name {
+		if !corebase.IsNull(Poles["Storage.Stream.Storage"]) && Poles["Storage.Stream.Storage"].(string) == storage.name {
 			return hash, nil
 		}
 	}
@@ -190,7 +191,7 @@ func (storage *Storage) createStorageStructure() error {
 	}
 	return nil
 }
-func StartStorage(Name string, client core.IClient, root string) *Storage {
+func StartStorage(Name string, client client.IClient, root string) *Storage {
 	s := &Storage{client: client, name: Name, root: root}
 	s.createStorageStructure()
 	s.start()

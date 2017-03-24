@@ -1,5 +1,7 @@
 package core
 
+import "github.com/crazyprograms/sud/corebase"
+
 type TypeInfo struct {
 	ConfigurationName string
 	DocumentType      string
@@ -16,4 +18,4 @@ func (ti *TypeInfo) GetNew() bool                 { return ti.New }
 func (ti *TypeInfo) GetRead() bool                { return ti.Read }
 func (ti *TypeInfo) GetSave() bool                { return ti.Save }
 
-var _ti ITypeInfo = (ITypeInfo)(&TypeInfo{})
+var _ti corebase.ITypeInfo = (corebase.ITypeInfo)(&TypeInfo{})

@@ -3,9 +3,11 @@ package core
 import (
 	"errors"
 	"strconv"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
-func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereLimit, tx *transaction) error {
+func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereLimit, tx *transaction) error {
 	if w.Skip > 0 {
 		state.Skip = int(w.Skip)
 	}
@@ -14,9 +16,9 @@ func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *query
 	}
 	return nil
 }
-func pwDocumentWhereOrder(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereOrder, tx *transaction) error {
+func pwDocumentWhereOrder(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereOrder, tx *transaction) error {
 	var err error
-	var info IPoleInfo
+	var info corebase.IPoleInfo
 	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 		return err
 	}
@@ -30,9 +32,9 @@ func pwDocumentWhereOrder(conf *Configuration, DocumentType string, state *query
 	}
 	return nil
 }
-func pwDocumentWhereContainPole(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereContainPole, tx *transaction) error {
+func pwDocumentWhereContainPole(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereContainPole, tx *transaction) error {
 	var err error
-	var info IPoleInfo
+	var info corebase.IPoleInfo
 	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 		return err
 	}
@@ -44,9 +46,9 @@ func pwDocumentWhereContainPole(conf *Configuration, DocumentType string, state 
 	state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NOT NULL`)
 	return nil
 }
-func pwDocumentWhereNotContainPole(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereNotContainPole, tx *transaction) error {
+func pwDocumentWhereNotContainPole(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereNotContainPole, tx *transaction) error {
 	var err error
-	var info IPoleInfo
+	var info corebase.IPoleInfo
 	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 		return err
 	}
@@ -65,9 +67,9 @@ func pwDocumentWhereNotContainPole(conf *Configuration, DocumentType string, sta
 	state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NULL`)
 	return nil
 }
-func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *queryState, w *DocumentWhereCompare, tx *transaction) error {
+func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereCompare, tx *transaction) error {
 	var err error
-	var info IPoleInfo
+	var info corebase.IPoleInfo
 	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *que
 	switch w.Operation {
 	case `Equally`:
 		{
-			if IsNull(Value) {
+			if corebase.IsNull(Value) {
 				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NULL `)
 			} else {
 				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" = ` + state.AddParam(w.Value))
@@ -87,7 +89,7 @@ func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *que
 		}
 	case `Not_Equally`:
 		{
-			if IsNull(Value) {
+			if corebase.IsNull(Value) {
 				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" IS NOT NULL `)
 			} else {
 				state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" <> ` + state.AddParam(w.Value))
@@ -109,28 +111,18 @@ func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *que
 	}
 	return nil
 }
-func processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []IDocumentWhere, tx *transaction) error {
+func processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []corebase.IDocumentWhere, tx *transaction) error {
 	for _, where := range wheres {
 		switch w := where.(type) {
-		case DocumentWhereLimit:
-			return pwDocumentWhereLimit(conf, DocumentType, state, &w, tx)
-		case *DocumentWhereLimit:
+		case *corebase.DocumentWhereLimit:
 			return pwDocumentWhereLimit(conf, DocumentType, state, w, tx)
-		case DocumentWhereOrder:
-			return pwDocumentWhereOrder(conf, DocumentType, state, &w, tx)
-		case *DocumentWhereOrder:
+		case *corebase.DocumentWhereOrder:
 			return pwDocumentWhereOrder(conf, DocumentType, state, w, tx)
-		case DocumentWhereContainPole:
-			return pwDocumentWhereContainPole(conf, DocumentType, state, &w, tx)
-		case *DocumentWhereContainPole:
+		case *corebase.DocumentWhereContainPole:
 			return pwDocumentWhereContainPole(conf, DocumentType, state, w, tx)
-		case DocumentWhereNotContainPole:
-			return pwDocumentWhereNotContainPole(conf, DocumentType, state, &w, tx)
-		case *DocumentWhereNotContainPole:
+		case *corebase.DocumentWhereNotContainPole:
 			return pwDocumentWhereNotContainPole(conf, DocumentType, state, w, tx)
-		case DocumentWhereCompare:
-			return pwDocumentWhereCompare(conf, DocumentType, state, &w, tx)
-		case *DocumentWhereCompare:
+		case *corebase.DocumentWhereCompare:
 			return pwDocumentWhereCompare(conf, DocumentType, state, w, tx)
 		}
 	}

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type transaction struct {
@@ -30,7 +32,7 @@ func (t *transaction) Query(query string, args ...interface{}) (*sql.Rows, error
 func (t *transaction) QueryRow(query string, args ...interface{}) *sql.Row {
 	return t.tx.QueryRow(query, args...)
 }
-func (tx *transaction) GetDocumentsPoles(ConfigurationName string, DocumentType string, poles []string, wheres []IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (tx *transaction) GetDocumentsPoles(ConfigurationName string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	var config *Configuration
 	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
@@ -76,7 +78,7 @@ func (tx *transaction) GetDocumentsPoles(ConfigurationName string, DocumentType 
 func (tx *transaction) SetDocumentPoles(ConfigurationName string, DocumentUID string, Poles map[string]interface{}) error {
 	var err error
 	var ok bool
-	var pi IPoleInfo
+	var pi corebase.IPoleInfo
 	var tl []*PoleTableInfo
 	var DocumentType string
 	var Readonly bool
@@ -142,14 +144,14 @@ func (tx *transaction) NewDocument(ConfigurationName string, DocumentType string
 	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
 		return "", err
 	}
-	var ti ITypeInfo
+	var ti corebase.ITypeInfo
 	if ti, err = config.GetTypeInfo(DocumentType); err != nil {
 		return "", err
 	}
 	if !ti.GetNew() {
 		return "", errors.New("new document. access denied: " + DocumentType)
 	}
-	DouceumentUID := NewUUID().String()
+	DouceumentUID := corebase.NewUUID().String()
 	_, err = tx.Exec(`INSERT INTO "Document"("__DocumentUID", "DocumentType", "Readonly", "DeleteDocument") VALUES ($1,$2,$3,$4)`, DouceumentUID, DocumentType, false, false)
 	if err != nil {
 		return "", err

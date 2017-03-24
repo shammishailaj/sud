@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type PoleCheckerStringValue struct {
@@ -15,7 +17,7 @@ type PoleCheckerStringValue struct {
 }
 
 func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value interface{}) error {
-	if pcsv.AllowNull && IsNull(Value) {
+	if pcsv.AllowNull && corebase.IsNull(Value) {
 		return nil
 	}
 	var ok bool
@@ -30,15 +32,13 @@ func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value interface{}) error {
 	}
 	return nil
 }
-func (pcsv *PoleCheckerStringValue) Load(doc IDocument) {
-	CheckerStringValueAllowNull := doc.GetPole("Configuration.PoleInfo.CheckerStringValueAllowNull")
-	CheckerStringValueList := doc.GetPole("Configuration.PoleInfo.CheckerStringValueList")
-	if !IsNull(CheckerStringValueAllowNull) {
+func (pcsv *PoleCheckerStringValue) Load(Poles map[string]interface{}) {
+	if CheckerStringValueAllowNull, ok := Poles["Configuration.PoleInfo.CheckerStringValueAllowNull"]; ok && !corebase.IsNull(CheckerStringValueAllowNull) {
 		if v, ok := CheckerStringValueAllowNull.(string); ok {
 			pcsv.AllowNull = (v == "True")
 		}
 	}
-	if !IsNull(CheckerStringValueList) {
+	if CheckerStringValueList, ok := Poles["Configuration.PoleInfo.CheckerStringValueList"]; ok && !corebase.IsNull(CheckerStringValueList) {
 		if v, ok := CheckerStringValueList.(string); ok {
 			for _, s := range strings.Split(v, ",") {
 				pcsv.List[s] = true
@@ -75,22 +75,26 @@ func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value interface{}) error {
 	}
 	return nil
 }
-func (pciv *PoleCheckerInt64Value) Load(doc IDocument) {
-	CheckerInt64ValueMin := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMin")
-	CheckerInt64ValueMax := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueMax")
-	CheckerInt64ValueList := doc.GetPole("Configuration.PoleInfo.CheckerInt64ValueList")
-	if v, ok := CheckerInt64ValueMin.(int64); ok {
-		pciv.Min = true
-		pciv.MinValue = v
+func (pciv *PoleCheckerInt64Value) Load(Poles map[string]interface{}) {
+
+	if CheckerInt64ValueMin, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueMin"]; ok1 {
+		if v, ok := CheckerInt64ValueMin.(int64); ok {
+			pciv.Min = true
+			pciv.MinValue = v
+		}
 	}
-	if v, ok := CheckerInt64ValueMax.(int64); ok {
-		pciv.Max = true
-		pciv.MaxValue = v
+	if CheckerInt64ValueMax, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueMax"]; ok1 {
+		if v, ok := CheckerInt64ValueMax.(int64); ok {
+			pciv.Max = true
+			pciv.MaxValue = v
+		}
 	}
-	if list, ok := CheckerInt64ValueList.(string); ok {
-		for _, s := range strings.Split(list, ",") {
-			if v, err := strconv.ParseInt(s, 10, 64); err == nil {
-				pciv.List[v] = true
+	if CheckerInt64ValueList, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueList"]; ok1 {
+		if list, ok := CheckerInt64ValueList.(string); ok {
+			for _, s := range strings.Split(list, ",") {
+				if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+					pciv.List[v] = true
+				}
 			}
 		}
 	}

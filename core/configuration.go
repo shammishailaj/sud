@@ -3,6 +3,8 @@ package core
 import (
 	"errors"
 	"strings"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 var baseConfiguration = map[string]*Configuration{}
@@ -12,25 +14,25 @@ func InitAddBaseConfiguration(Name string, conf *Configuration) {
 }
 
 type Configuration struct {
-	polesInfo               map[string]map[string]IPoleInfo
-	typesInfo               map[string]ITypeInfo
-	callsInfo               map[string]ICallInfo
+	polesInfo               map[string]map[string]corebase.IPoleInfo
+	typesInfo               map[string]corebase.ITypeInfo
+	callsInfo               map[string]corebase.ICallInfo
 	dependConfigurationName []string
 }
 
-func (conf *Configuration) GetCallInfo(CallName string) (ICallInfo, error) {
+func (conf *Configuration) GetCallInfo(CallName string) (corebase.ICallInfo, error) {
 	if ci, ok := conf.callsInfo[CallName]; ok {
 		return ci, nil
 	}
 	return nil, errors.New("call not found: " + CallName)
 }
-func (conf *Configuration) GetTypeInfo(DocumentType string) (ITypeInfo, error) {
+func (conf *Configuration) GetTypeInfo(DocumentType string) (corebase.ITypeInfo, error) {
 	if m, ok := conf.typesInfo[DocumentType]; ok {
 		return m, nil
 	}
 	return nil, errors.New("type not found: " + DocumentType)
 }
-func (conf *Configuration) GetPoleInfo(DocumentType string, PoleName string) (IPoleInfo, error) {
+func (conf *Configuration) GetPoleInfo(DocumentType string, PoleName string) (corebase.IPoleInfo, error) {
 	if m, ok := conf.polesInfo[DocumentType]; ok {
 		if pi, ok := m[PoleName]; ok {
 			return pi, nil
@@ -38,9 +40,9 @@ func (conf *Configuration) GetPoleInfo(DocumentType string, PoleName string) (IP
 	}
 	return nil, errors.New("pole not found: " + PoleName)
 }
-func (conf *Configuration) GetPolesInfo(DocumentType string, Poles []string) map[string]IPoleInfo {
+func (conf *Configuration) GetPolesInfo(DocumentType string, Poles []string) map[string]corebase.IPoleInfo {
 	if m, ok := conf.polesInfo[DocumentType]; ok {
-		polesInfo := map[string]IPoleInfo{}
+		polesInfo := map[string]corebase.IPoleInfo{}
 		if len(Poles) != 0 {
 			for _, pole := range Poles {
 				p := strings.Split(pole, ".")
@@ -74,7 +76,7 @@ func (conf *Configuration) GetPolesInfo(DocumentType string, Poles []string) map
 		}
 		return polesInfo
 	}
-	return map[string]IPoleInfo{}
+	return map[string]corebase.IPoleInfo{}
 }
 func (conf *Configuration) AddDependConfiguration(DependConfigurationName string) {
 	conf.dependConfigurationName = append(conf.dependConfigurationName, DependConfigurationName)
@@ -85,10 +87,10 @@ func (conf *Configuration) AddCall(ConfigurationName string, Name string, PullNa
 func (conf *Configuration) AddType(ConfigurationName string, DocumentType string, New bool, Read bool, Save bool, Title string) {
 	conf.typesInfo[DocumentType] = &TypeInfo{ConfigurationName: ConfigurationName, DocumentType: DocumentType, New: New, Read: Read, Save: Save, Title: Title}
 }
-func (conf *Configuration) AddPole(ConfigurationName string, DocumentType string, PoleName string, PoleType string, Default Object, IndexType string, Checker IPoleChecker, New bool, Edit bool, Title string) {
+func (conf *Configuration) AddPole(ConfigurationName string, DocumentType string, PoleName string, PoleType string, Default corebase.Object, IndexType string, Checker corebase.IPoleChecker, New bool, Edit bool, Title string) {
 	_, ok := conf.polesInfo[DocumentType]
 	if !ok {
-		conf.polesInfo[DocumentType] = make(map[string]IPoleInfo)
+		conf.polesInfo[DocumentType] = make(map[string]corebase.IPoleInfo)
 	}
 	conf.polesInfo[DocumentType][PoleName] = &PoleInfo{
 		ConfigurationName: ConfigurationName,
@@ -105,9 +107,9 @@ func (conf *Configuration) AddPole(ConfigurationName string, DocumentType string
 }
 func NewConfiguration() *Configuration {
 	return &Configuration{
-		polesInfo:               make(map[string]map[string]IPoleInfo),
-		typesInfo:               make(map[string]ITypeInfo),
-		callsInfo:               make(map[string]ICallInfo),
+		polesInfo:               make(map[string]map[string]corebase.IPoleInfo),
+		typesInfo:               make(map[string]corebase.ITypeInfo),
+		callsInfo:               make(map[string]corebase.ICallInfo),
 		dependConfigurationName: []string{},
 	}
 }

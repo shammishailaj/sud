@@ -1,4 +1,4 @@
-package core
+package corebase
 
 type Object interface{}
 
