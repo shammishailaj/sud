@@ -3,6 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
@@ -10,8 +11,6 @@ import (
 	"golang.org/x/net/publicsuffix"
 
 	"bytes"
-
-	"fmt"
 
 	"strings"
 
@@ -168,7 +167,7 @@ func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWa
 	}
 	return callpull.Result{Result: Result, Error: callpullError}, nil
 }
-func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	w := make([]map[string]*jsonParam, len(wheres), len(wheres))
 	for i, where := range wheres {
@@ -179,7 +178,7 @@ func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType stri
 		p["whereType"] = WhereType
 		for name, value := range Params {
 			n := strings.Split(name, ".")
-			if n[0] != "DocumentWhere" || n[1] != WhereType {
+			if n[0] != "RecordWhere" || n[1] != WhereType {
 				return nil, errors.New("where param name error " + name)
 			}
 			p[strings.ToLower(n[2][0:1])+n[2][1:]] = value
@@ -188,46 +187,46 @@ func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType stri
 			return nil, err
 		}
 	}
-	result := jsonGetDocumentPolesResult{}
-	if err = client.httpJsonClient("/json/getdocumentpoles", &jsonGetDocumentPoles{TransactionUID: TransactionUID, DocumentType: DocumentType, Poles: poles, Wheres: w}, &result); err != nil {
+	result := jsonGetRecordPolesResult{}
+	if err = client.httpJsonClient("/json/getrecordpoles", &jsonGetRecordPoles{TransactionUID: TransactionUID, RecordType: RecordType, Poles: poles, Wheres: w}, &result); err != nil {
 		return nil, err
 	}
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	Documents := map[string]map[string]interface{}{}
-	if result.Documents != nil {
-		for DocumentUID, Poles := range *result.Documents {
-			if Documents[DocumentUID], err = jsonUnPackMap(Poles); err != nil {
+	Records := map[string]map[string]interface{}{}
+	if result.Records != nil {
+		for RecordUID, Poles := range *result.Records {
+			if Records[RecordUID], err = jsonUnPackMap(Poles); err != nil {
 				return nil, err
 			}
 		}
 	}
-	return Documents, nil
+	return Records, nil
 }
-func (client *Client) NewDocument(TransactionUID string, DocumentType string, poles map[string]interface{}) (string, error) {
+func (client *Client) NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (string, error) {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
 		return "", err
 	}
-	result := jsonNewDocumentResult{}
-	if err = client.httpJsonClient("/json/newdocument", &jsonNewDocument{TransactionUID: TransactionUID, DocumentType: DocumentType, Poles: &m}, &result); err != nil {
+	result := jsonNewRecordResult{}
+	if err = client.httpJsonClient("/json/newrecord", &jsonNewRecord{TransactionUID: TransactionUID, RecordType: RecordType, Poles: &m}, &result); err != nil {
 		return "", err
 	}
 	if result.Error != "" {
 		return "", errors.New(result.Error)
 	}
-	return result.DocumentUID, nil
+	return result.RecordUID, nil
 }
-func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {
+func (client *Client) SetRecordPoles(TransactionUID string, RecordUID string, poles map[string]interface{}) error {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
 		return err
 	}
-	result := jsonSetDocumentPolesResult{}
-	if err = client.httpJsonClient("/json/setdocumentpoles", &jsonSetDocumentPoles{TransactionUID: TransactionUID, DocumentUID: DocumentUID, Poles: &m}, &result); err != nil {
+	result := jsonSetRecordPolesResult{}
+	if err = client.httpJsonClient("/json/setrecordpoles", &jsonSetRecordPoles{TransactionUID: TransactionUID, RecordUID: RecordUID, Poles: &m}, &result); err != nil {
 		return err
 	}
 	if result.Error != "" {

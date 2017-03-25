@@ -101,8 +101,8 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 	p := path.Join(storage.root, storageDir, hash[len(hash)-2:], hash[len(hash)-4:len(hash)-2], hash)
 	var docs map[string]map[string]interface{}
 
-	if docs, err = storage.client.GetDocumentsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IDocumentWhere{
-		&corebase.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
+	if docs, err = storage.client.GetRecordsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{
+		&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
 	}); err != nil {
 		return "", err
 	}
@@ -115,7 +115,7 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 	storage.lockRW.Lock()
 	defer storage.lockRW.Unlock()
 	os.Rename(tmpfile.Name(), p)
-	if _, err = storage.client.NewDocument(TransactionUID, "Storage.Stream", map[string]interface{}{
+	if _, err = storage.client.NewRecord(TransactionUID, "Storage.Stream", map[string]interface{}{
 		"Storage.Stream.Hash":     hash,
 		"Storage.Stream.Storage":  storage.name,
 		"Storage.Stream.Priority": int64(0),

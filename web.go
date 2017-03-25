@@ -38,8 +38,9 @@ func checkTest(c *core.Core) {
 		fmt.Println(err)
 	}
 	defer c.RollbackTransaction(tid)
+	//c.CreateDatabase()
 	fmt.Println(c.CheckConfiguration(tid, "Configuration"))
-	fmt.Println(c.CheckConfiguration(tid, "Document"))
+	fmt.Println(c.CheckConfiguration(tid, "Record"))
 	fmt.Println(c.CheckConfiguration(tid, "Storage"))
 	c.CommitTransaction(tid)
 }

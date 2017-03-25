@@ -37,7 +37,7 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 		}
 	}
 	var docs map[string]map[string]interface{}
-	if docs, err = cr.GetDocumentsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IDocumentWhere{&corebase.DocumentWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
+	if docs, err = cr.GetRecordsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
 		return callpull.Result{Result: nil, Error: err}, nil
 	}
 	if len(docs) == 0 {

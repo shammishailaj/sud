@@ -5,14 +5,14 @@ type IPoleChecker interface {
 	Load(poles map[string]interface{})
 }
 
-type IDocumentWhere interface {
+type IRecordWhere interface {
 	Load(Poles map[string]interface{}) error
 	Save() (string, map[string]interface{}, error)
 }
 
 type ITypeInfo interface {
 	GetConfigurationName() string
-	GetDocumentType() string
+	GetRecordType() string
 	GetTitle() string
 	GetNew() bool
 	GetRead() bool
@@ -21,7 +21,7 @@ type ITypeInfo interface {
 
 type IPoleInfo interface {
 	GetConfigurationName() string
-	GetDocumentType() string
+	GetRecordType() string
 	GetPoleName() string
 	GetPoleType() string
 	GetTitle() string

@@ -4,7 +4,7 @@ import "github.com/crazyprograms/sud/corebase"
 
 type PoleInfo struct {
 	ConfigurationName string
-	DocumentType      string
+	RecordType      string
 	PoleName          string
 	PoleType          string
 	Title             string
@@ -17,7 +17,7 @@ type PoleInfo struct {
 }
 
 func (pi *PoleInfo) GetConfigurationName() string      { return pi.ConfigurationName }
-func (pi *PoleInfo) GetDocumentType() string           { return pi.DocumentType }
+func (pi *PoleInfo) GetRecordType() string           { return pi.RecordType }
 func (pi *PoleInfo) GetPoleName() string               { return pi.PoleName }
 func (pi *PoleInfo) GetPoleType() string               { return pi.PoleType }
 func (pi *PoleInfo) GetTitle() string                  { return pi.Title }

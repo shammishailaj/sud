@@ -110,17 +110,17 @@ func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, e
 	}
 	for e := depend.Front(); e != nil; e = e.Next() {
 		c := e.Value.(*Configuration)
-		for DocumentType, typeInfo := range c.typesInfo {
-			conf.typesInfo[DocumentType] = typeInfo
+		for RecordType, typeInfo := range c.typesInfo {
+			conf.typesInfo[RecordType] = typeInfo
 		}
 		for CallName, callInfo := range c.callsInfo {
 			conf.callsInfo[CallName] = callInfo
 		}
-		for DocumentType, poleTypeMap := range c.polesInfo {
-			ptm, ok := conf.polesInfo[DocumentType]
+		for RecordType, poleTypeMap := range c.polesInfo {
+			ptm, ok := conf.polesInfo[RecordType]
 			if !ok {
 				ptm = make(map[string]corebase.IPoleInfo)
-				conf.polesInfo[DocumentType] = ptm
+				conf.polesInfo[RecordType] = ptm
 			}
 			for PoleName, poleInfo := range poleTypeMap {
 				ptm[PoleName] = poleInfo
@@ -259,27 +259,27 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	}
 	return cp.Call(Name, Params, TimeoutWait)
 }
-func (core *Core) GetDocumentsPoles(TransactionUID string, ConfigurationName string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
+func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return nil, err
 	}
-	return tx.GetDocumentsPoles(ConfigurationName, DocumentType, poles, wheres)
+	return tx.GetRecordsPoles(ConfigurationName, RecordType, poles, wheres)
 }
-func (core *Core) SetDocumentPoles(TransactionUID string, ConfigurationName string, DocumentUID string, poles map[string]interface{}) error {
+func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string, RecordUID string, poles map[string]interface{}) error {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
-	return tx.SetDocumentPoles(ConfigurationName, DocumentUID, poles)
+	return tx.SetRecordPoles(ConfigurationName, RecordUID, poles)
 }
-func (core *Core) NewDocument(TransactionUID string, ConfigurationName string, DocumentType string, Poles map[string]interface{}) (string, error) {
+func (core *Core) NewRecord(TransactionUID string, ConfigurationName string, RecordType string, Poles map[string]interface{}) (string, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return "", err
 	}
-	return tx.NewDocument(ConfigurationName, DocumentType, Poles)
+	return tx.NewRecord(ConfigurationName, RecordType, Poles)
 }

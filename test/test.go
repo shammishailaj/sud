@@ -12,10 +12,10 @@ func testStd(cr *core.Core, Name string, Param map[string]interface{}, timeOutWa
 	return callpull.Result{Result: "Test Ok"}, nil
 }
 func init() {
-	initDocumentConfiguration()
+	initRecordConfiguration()
 	core.AddStdCall("TestStd", testStd)
 }
-func initDocumentConfiguration() {
+func initRecordConfiguration() {
 	conf := core.NewConfiguration()
 	conf.AddType("Test", "Test", true, true, true, "Тест")
 	conf.AddPole("Test", "Test", "Test.Test1", "StringValue", corebase.NULL, "Index", &core.PoleCheckerStringValue{}, true, true, "Поле для тестирования")

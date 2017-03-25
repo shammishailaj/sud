@@ -73,31 +73,31 @@ type jsonCallResult struct {
 	CallPullError string     `json:"callPullError,omitempty"`
 	Error         string     `json:"error,omitempty"`
 }
-type jsonSetDocumentPoles struct {
+type jsonSetRecordPoles struct {
 	TransactionUID string                 `json:"transactionUID"`
-	DocumentUID    string                 `json:"documentUID"`
+	RecordUID    string                 `json:"recordUID"`
 	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
 }
-type jsonSetDocumentPolesResult struct {
+type jsonSetRecordPolesResult struct {
 	Error string `json:"error,omitempty"`
 }
-type jsonGetDocumentPoles struct {
+type jsonGetRecordPoles struct {
 	TransactionUID string                  `json:"transactionUID"`
-	DocumentType   string                  `json:"documentType"`
+	RecordType   string                  `json:"recordType"`
 	Poles          []string                `json:"poles"`
 	Wheres         []map[string]*jsonParam `json:"wheres,omitempty"`
 }
-type jsonGetDocumentPolesResult struct {
-	Documents *map[string]map[string]*jsonParam `json:"documents"`
+type jsonGetRecordPolesResult struct {
+	Records *map[string]map[string]*jsonParam `json:"records"`
 	Error     string                            `json:"error,omitempty"`
 }
-type jsonNewDocument struct {
+type jsonNewRecord struct {
 	TransactionUID string                 `json:"transactionUID"`
-	DocumentType   string                 `json:"documentType"`
+	RecordType   string                 `json:"recordType"`
 	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
 }
-type jsonNewDocumentResult struct {
-	DocumentUID string `json:"documentUID"`
+type jsonNewRecordResult struct {
+	RecordUID string `json:"recordUID"`
 	Error       string `json:"error,omitempty"`
 }
 type jsonParam struct {

@@ -5,141 +5,141 @@ import (
 	"time"
 )
 
-var documentWheres = map[string]func() IDocumentWhere{
-	"ContainPole": func() IDocumentWhere {
-		return &DocumentWhereContainPole{}
+var recordWheres = map[string]func() IRecordWhere{
+	"ContainPole": func() IRecordWhere {
+		return &RecordWhereContainPole{}
 	},
-	"NotContainPole": func() IDocumentWhere {
-		return &DocumentWhereNotContainPole{}
+	"NotContainPole": func() IRecordWhere {
+		return &RecordWhereNotContainPole{}
 	},
-	"Limit": func() IDocumentWhere {
-		return &DocumentWhereLimit{}
+	"Limit": func() IRecordWhere {
+		return &RecordWhereLimit{}
 	},
-	"Order": func() IDocumentWhere {
-		return &DocumentWhereOrder{}
+	"Order": func() IRecordWhere {
+		return &RecordWhereOrder{}
 	},
-	"SelectDocument": func() IDocumentWhere {
-		return &DocumentWhereSelectDocument{}
+	"SelectRecord": func() IRecordWhere {
+		return &RecordWhereSelectRecord{}
 	},
-	"Compare": func() IDocumentWhere {
-		return &DocumentWhereCompare{}
+	"Compare": func() IRecordWhere {
+		return &RecordWhereCompare{}
 	},
 }
 
-func InitAddDocumentWhere(DocumentWhereType string, newWhere func() IDocumentWhere) {
-	documentWheres[DocumentWhereType] = newWhere
+func InitAddRecordWhere(RecordWhereType string, newWhere func() IRecordWhere) {
+	recordWheres[RecordWhereType] = newWhere
 }
-func NewDocumentWhere(DocumentWhereType string) (IDocumentWhere, error) {
-	var n func() IDocumentWhere
+func NewRecordWhere(RecordWhereType string) (IRecordWhere, error) {
+	var n func() IRecordWhere
 	var ok bool
-	if n, ok = documentWheres[DocumentWhereType]; !ok {
-		return nil, errors.New("DocumentWhere " + DocumentWhereType + " not found")
+	if n, ok = recordWheres[RecordWhereType]; !ok {
+		return nil, errors.New("RecordWhere " + RecordWhereType + " not found")
 	}
 	return n(), nil
 }
 
-type DocumentWhereContainPole struct {
+type RecordWhereContainPole struct {
 	PoleName string
 }
 
-func (dw *DocumentWhereContainPole) Save() (string, map[string]interface{}, error) {
-	return "ContainPole", map[string]interface{}{"DocumentWhere.ContainPole.PoleName": dw.PoleName}, nil
+func (dw *RecordWhereContainPole) Save() (string, map[string]interface{}, error) {
+	return "ContainPole", map[string]interface{}{"RecordWhere.ContainPole.PoleName": dw.PoleName}, nil
 }
 
-func (dw *DocumentWhereContainPole) Load(Poles map[string]interface{}) error {
+func (dw *RecordWhereContainPole) Load(Poles map[string]interface{}) error {
 	var ok bool
-	if dw.PoleName, ok = Poles["DocumentWhere.ContainPole.PoleName"].(string); !ok {
-		return errors.New("not found DocumentWhere.ContainPole.PoleName")
+	if dw.PoleName, ok = Poles["RecordWhere.ContainPole.PoleName"].(string); !ok {
+		return errors.New("not found RecordWhere.ContainPole.PoleName")
 	}
 	return nil
 }
 
-type DocumentWhereNotContainPole struct {
+type RecordWhereNotContainPole struct {
 	PoleName    string
 	InTableName string
 	TabLock     bool
 }
 
-func (dw *DocumentWhereNotContainPole) Save() (string, map[string]interface{}, error) {
-	p := map[string]interface{}{"DocumentWhere.NotContainPole.PoleName": dw.PoleName, "DocumentWhere.NotContainPole.InTableName": dw.InTableName}
+func (dw *RecordWhereNotContainPole) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"RecordWhere.NotContainPole.PoleName": dw.PoleName, "RecordWhere.NotContainPole.InTableName": dw.InTableName}
 	if dw.TabLock == true {
-		p["DocumentWhere.NotContainPole.TabLock"] = dw.TabLock
+		p["RecordWhere.NotContainPole.TabLock"] = dw.TabLock
 	}
 	return "NotContainPole", p, nil
 }
 
-func (dw *DocumentWhereNotContainPole) Load(Poles map[string]interface{}) error {
+func (dw *RecordWhereNotContainPole) Load(Poles map[string]interface{}) error {
 	var ok bool
-	if dw.PoleName, ok = Poles["DocumentWhere.NotContainPole.PoleName"].(string); !ok {
-		return errors.New("not found DocumentWhere.NotContainPole.PoleName")
+	if dw.PoleName, ok = Poles["RecordWhere.NotContainPole.PoleName"].(string); !ok {
+		return errors.New("not found RecordWhere.NotContainPole.PoleName")
 	}
-	if dw.InTableName, ok = Poles["DocumentWhere.NotContainPole.InTableName"].(string); !ok {
-		return errors.New("not found DocumentWhere.NotContainPole.InTableName")
+	if dw.InTableName, ok = Poles["RecordWhere.NotContainPole.InTableName"].(string); !ok {
+		return errors.New("not found RecordWhere.NotContainPole.InTableName")
 	}
-	if dw.TabLock, ok = Poles["DocumentWhere.NotContainPole.TabLock"].(bool); !ok {
+	if dw.TabLock, ok = Poles["RecordWhere.NotContainPole.TabLock"].(bool); !ok {
 		dw.TabLock = false
 	}
 	return nil
 }
 
-type DocumentWhereLimit struct {
+type RecordWhereLimit struct {
 	Skip  int64
 	Count int64
 }
 
-func (dw *DocumentWhereLimit) Save() (string, map[string]interface{}, error) {
-	return "Limit", map[string]interface{}{"DocumentWhere.Limit.Skip": dw.Skip, "DocumentWhere.Limit.Count": dw.Count}, nil
+func (dw *RecordWhereLimit) Save() (string, map[string]interface{}, error) {
+	return "Limit", map[string]interface{}{"RecordWhere.Limit.Skip": dw.Skip, "RecordWhere.Limit.Count": dw.Count}, nil
 }
 
-func (dw *DocumentWhereLimit) Load(Poles map[string]interface{}) error {
-	dw.Skip = Poles["DocumentWhere.Limit.Skip"].(int64)
-	dw.Count = Poles["DocumentWhere.Limit.Count"].(int64)
+func (dw *RecordWhereLimit) Load(Poles map[string]interface{}) error {
+	dw.Skip = Poles["RecordWhere.Limit.Skip"].(int64)
+	dw.Count = Poles["RecordWhere.Limit.Count"].(int64)
 	return nil
 }
 
-type DocumentWhereOrder struct {
+type RecordWhereOrder struct {
 	PoleName string
 	ASC      bool
 }
 
-func (dw *DocumentWhereOrder) Save() (string, map[string]interface{}, error) {
-	p := map[string]interface{}{"DocumentWhere.Order.PoleName": dw.PoleName}
+func (dw *RecordWhereOrder) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"RecordWhere.Order.PoleName": dw.PoleName}
 	if dw.ASC == true {
-		p["DocumentWhere.Order.ASC"] = "ASC"
+		p["RecordWhere.Order.ASC"] = "ASC"
 	}
 	return "Order", p, nil
 }
 
-func (dw *DocumentWhereOrder) Load(Poles map[string]interface{}) error {
+func (dw *RecordWhereOrder) Load(Poles map[string]interface{}) error {
 	var ok bool
-	if dw.PoleName, ok = Poles["DocumentWhere.Order.PoleName"].(string); !ok {
-		return errors.New("not found DocumentWhere.Order.PoleName")
+	if dw.PoleName, ok = Poles["RecordWhere.Order.PoleName"].(string); !ok {
+		return errors.New("not found RecordWhere.Order.PoleName")
 	}
 	var ASC string
-	if ASC, ok = Poles["DocumentWhere.Order.ASC"].(string); ok {
+	if ASC, ok = Poles["RecordWhere.Order.ASC"].(string); ok {
 		dw.ASC = ASC == "ASC"
 	}
 	return nil
 }
 
-type DocumentWhereSelectDocument struct {
-	DocumentUID string
+type RecordWhereSelectRecord struct {
+	RecordUID string
 }
 
-func (dw *DocumentWhereSelectDocument) Save() (string, map[string]interface{}, error) {
-	return "SelectDocument", map[string]interface{}{"DocumentWhere.SelectDocument.DocumentUID": dw.DocumentUID}, nil
+func (dw *RecordWhereSelectRecord) Save() (string, map[string]interface{}, error) {
+	return "SelectRecord", map[string]interface{}{"RecordWhere.SelectRecord.RecordUID": dw.RecordUID}, nil
 }
 
-func (dw *DocumentWhereSelectDocument) Load(Poles map[string]interface{}) error {
+func (dw *RecordWhereSelectRecord) Load(Poles map[string]interface{}) error {
 	var ok bool
 	var UID string
-	if UID, ok = Poles["DocumentWhere.SelectDocument.DocumentUID"].(string); ok {
-		dw.DocumentUID = UID
+	if UID, ok = Poles["RecordWhere.SelectRecord.RecordUID"].(string); ok {
+		dw.RecordUID = UID
 	}
 	return nil
 }
 
-type DocumentWhereCompare struct {
+type RecordWhereCompare struct {
 	PoleName      string
 	Operation     string
 	ExtensionName string
@@ -147,36 +147,36 @@ type DocumentWhereCompare struct {
 	Value Object
 }
 
-func (dw *DocumentWhereCompare) Save() (string, map[string]interface{}, error) {
-	p := map[string]interface{}{"DocumentWhere.Compare.PoleName": dw.PoleName, "DocumentWhere.Compare.Operation": dw.Operation}
+func (dw *RecordWhereCompare) Save() (string, map[string]interface{}, error) {
+	p := map[string]interface{}{"RecordWhere.Compare.PoleName": dw.PoleName, "RecordWhere.Compare.Operation": dw.Operation}
 	switch v := dw.Value.(type) {
 	case string:
-		p["DocumentWhere.Compare.StringValue"] = v
+		p["RecordWhere.Compare.StringValue"] = v
 	case int64:
-		p["DocumentWhere.Compare.Int64Value"] = v
+		p["RecordWhere.Compare.Int64Value"] = v
 	case time.Time:
-		p["DocumentWhere.Compare.DateTimeValue"] = v
+		p["RecordWhere.Compare.DateTimeValue"] = v
 	}
 	if dw.ExtensionName != "" {
-		p["DocumentWhere.Compare.Extension"] = dw.ExtensionName
+		p["RecordWhere.Compare.Extension"] = dw.ExtensionName
 	}
 	return "Compare", p, nil
 }
 
-func (dw *DocumentWhereCompare) Load(Poles map[string]interface{}) error {
+func (dw *RecordWhereCompare) Load(Poles map[string]interface{}) error {
 	var ok bool
-	if dw.PoleName, ok = Poles["DocumentWhere.Compare.PoleName"].(string); !ok {
-		return errors.New("not found DocumentWhere.Compare.PoleName")
+	if dw.PoleName, ok = Poles["RecordWhere.Compare.PoleName"].(string); !ok {
+		return errors.New("not found RecordWhere.Compare.PoleName")
 	}
-	if dw.Operation, ok = Poles["DocumentWhere.Compare.Operation"].(string); !ok {
-		return errors.New("not found DocumentWhere.Compare.Operation")
+	if dw.Operation, ok = Poles["RecordWhere.Compare.Operation"].(string); !ok {
+		return errors.New("not found RecordWhere.Compare.Operation")
 	}
 	poles := map[string]bool{
-		"DocumentWhere.Compare.StringValue":       true,
-		"DocumentWhere.Compare.Int64Value":        true,
-		"DocumentWhere.Compare.DateValue":         true,
-		"DocumentWhere.Compare.DateTimeValue":     true,
-		"DocumentWhere.Compare.DocumentLinkValue": true,
+		"RecordWhere.Compare.StringValue":       true,
+		"RecordWhere.Compare.Int64Value":        true,
+		"RecordWhere.Compare.DateValue":         true,
+		"RecordWhere.Compare.DateTimeValue":     true,
+		"RecordWhere.Compare.RecordLinkValue": true,
 	}
 	for p, value := range Poles {
 		if _, ok := poles[p]; ok {
@@ -184,7 +184,7 @@ func (dw *DocumentWhereCompare) Load(Poles map[string]interface{}) error {
 			break
 		}
 	}
-	if ext := Poles["DocumentWhere.Compare.Extension"]; !IsNull(ext) {
+	if ext := Poles["RecordWhere.Compare.Extension"]; !IsNull(ext) {
 		dw.ExtensionName = ext.(string)
 	}
 	return nil

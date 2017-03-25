@@ -51,14 +51,14 @@ func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[
 func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
 	return client.core.Call(client.configurationName, Name, Params, TimeoutWait)
 }
-func (client *Client) GetDocumentsPoles(TransactionUID string, DocumentType string, poles []string, wheres []corebase.IDocumentWhere) (map[string]map[string]interface{}, error) {
-	return client.core.GetDocumentsPoles(TransactionUID, client.configurationName, DocumentType, poles, wheres)
+func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
+	return client.core.GetRecordsPoles(TransactionUID, client.configurationName, RecordType, poles, wheres)
 }
-func (client *Client) SetDocumentPoles(TransactionUID string, DocumentUID string, poles map[string]interface{}) error {
-	return client.core.SetDocumentPoles(TransactionUID, client.configurationName, DocumentUID, poles)
+func (client *Client) SetRecordPoles(TransactionUID string, RecordUID string, poles map[string]interface{}) error {
+	return client.core.SetRecordPoles(TransactionUID, client.configurationName, RecordUID, poles)
 }
-func (client *Client) NewDocument(TransactionUID string, DocumentType string, Poles map[string]interface{}) (string, error) {
-	return client.core.NewDocument(TransactionUID, client.configurationName, DocumentType, Poles)
+func (client *Client) NewRecord(TransactionUID string, RecordType string, Poles map[string]interface{}) (string, error) {
+	return client.core.NewRecord(TransactionUID, client.configurationName, RecordType, Poles)
 }
 
 /**/

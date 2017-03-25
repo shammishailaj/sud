@@ -7,7 +7,7 @@ import (
 	"github.com/crazyprograms/sud/corebase"
 )
 
-func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereLimit, tx *transaction) error {
+func pwRecordWhereLimit(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereLimit, tx *transaction) error {
 	if w.Skip > 0 {
 		state.Skip = int(w.Skip)
 	}
@@ -16,15 +16,15 @@ func pwDocumentWhereLimit(conf *Configuration, DocumentType string, state *query
 	}
 	return nil
 }
-func pwDocumentWhereOrder(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereOrder, tx *transaction) error {
+func pwRecordWhereOrder(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereOrder, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
+	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
 	pti.FromPoleInfo(info)
-	state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+	state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__RecordUID" = "Record"."__RecordUID")`)
 	if w.ASC {
 		state.AddOrder(`"` + pti.TableName + `"."` + pti.PoleName + `" ASC`)
 	} else {
@@ -32,24 +32,24 @@ func pwDocumentWhereOrder(conf *Configuration, DocumentType string, state *query
 	}
 	return nil
 }
-func pwDocumentWhereContainPole(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereContainPole, tx *transaction) error {
+func pwRecordWhereContainPole(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereContainPole, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
+	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
 	pti.FromPoleInfo(info)
 	Table := `table` + strconv.Itoa(len(state.tables))
 	WithSQL := ``
-	state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+	state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__RecordUID" = "Record"."__RecordUID")`)
 	state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NOT NULL`)
 	return nil
 }
-func pwDocumentWhereNotContainPole(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereNotContainPole, tx *transaction) error {
+func pwRecordWhereNotContainPole(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereNotContainPole, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
+	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
@@ -61,21 +61,21 @@ func pwDocumentWhereNotContainPole(conf *Configuration, DocumentType string, sta
 	}
 	if w.InTableName != `` {
 		d := new([]byte)
-		state.AddPoleSQL(`"`+Table+`"."__DocumentUID" AS "`+w.InTableName+`"`, d)
+		state.AddPoleSQL(`"`+Table+`"."__RecordUID" AS "`+w.InTableName+`"`, d)
 	}
-	state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+	state.AddTable(`Contain_`+info.GetPoleName(), ` LEFT JOIN "`+pti.TableName+`" AS "`+Table+`" `+WithSQL+` ON ("`+Table+`"."__RecordUID" = "Record"."__RecordUID")`)
 	state.AddWhere(`"` + Table + `"."` + pti.PoleName + `" IS NULL`)
 	return nil
 }
-func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *queryState, w *corebase.DocumentWhereCompare, tx *transaction) error {
+func pwRecordWhereCompare(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereCompare, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(DocumentType, w.PoleName); err != nil {
+	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
 	pti.FromPoleInfo(info)
-	state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID")`)
+	state.AddTable(pti.TableName, `JOIN "`+pti.TableName+`" ON ("`+pti.TableName+`"."__RecordUID" = "Record"."__RecordUID")`)
 	//String VarName = State.AddParam(where.getValue(m_Configuration));
 	Value := w.Value
 	switch w.Operation {
@@ -111,19 +111,19 @@ func pwDocumentWhereCompare(conf *Configuration, DocumentType string, state *que
 	}
 	return nil
 }
-func processWheres(conf *Configuration, DocumentType string, state *queryState, wheres []corebase.IDocumentWhere, tx *transaction) error {
+func processWheres(conf *Configuration, RecordType string, state *queryState, wheres []corebase.IRecordWhere, tx *transaction) error {
 	for _, where := range wheres {
 		switch w := where.(type) {
-		case *corebase.DocumentWhereLimit:
-			return pwDocumentWhereLimit(conf, DocumentType, state, w, tx)
-		case *corebase.DocumentWhereOrder:
-			return pwDocumentWhereOrder(conf, DocumentType, state, w, tx)
-		case *corebase.DocumentWhereContainPole:
-			return pwDocumentWhereContainPole(conf, DocumentType, state, w, tx)
-		case *corebase.DocumentWhereNotContainPole:
-			return pwDocumentWhereNotContainPole(conf, DocumentType, state, w, tx)
-		case *corebase.DocumentWhereCompare:
-			return pwDocumentWhereCompare(conf, DocumentType, state, w, tx)
+		case *corebase.RecordWhereLimit:
+			return pwRecordWhereLimit(conf, RecordType, state, w, tx)
+		case *corebase.RecordWhereOrder:
+			return pwRecordWhereOrder(conf, RecordType, state, w, tx)
+		case *corebase.RecordWhereContainPole:
+			return pwRecordWhereContainPole(conf, RecordType, state, w, tx)
+		case *corebase.RecordWhereNotContainPole:
+			return pwRecordWhereNotContainPole(conf, RecordType, state, w, tx)
+		case *corebase.RecordWhereCompare:
+			return pwRecordWhereCompare(conf, RecordType, state, w, tx)
 		}
 	}
 	return nil
