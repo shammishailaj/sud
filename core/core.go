@@ -259,7 +259,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	}
 	return cp.Call(Name, Params, TimeoutWait)
 }
-func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
+func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
@@ -267,7 +267,7 @@ func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName strin
 	}
 	return tx.GetRecordsPoles(ConfigurationName, RecordType, poles, wheres)
 }
-func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string, RecordUID string, poles map[string]interface{}) error {
+func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string, RecordUID corebase.UUID, poles map[string]interface{}) error {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
@@ -275,11 +275,11 @@ func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string
 	}
 	return tx.SetRecordPoles(ConfigurationName, RecordUID, poles)
 }
-func (core *Core) NewRecord(TransactionUID string, ConfigurationName string, RecordType string, Poles map[string]interface{}) (string, error) {
+func (core *Core) NewRecord(TransactionUID string, ConfigurationName string, RecordType string, Poles map[string]interface{}) (corebase.UUID, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
-		return "", err
+		return corebase.NullUUID, err
 	}
 	return tx.NewRecord(ConfigurationName, RecordType, Poles)
 }

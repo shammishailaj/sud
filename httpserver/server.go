@@ -401,7 +401,7 @@ func (server *Server) jsonNewRecord(w http.ResponseWriter, r *http.Request, In i
 	if Poles, err = jsonUnPackMap(*InParam.Poles); err != nil {
 		return nil, err
 	}
-	var RecordUID string
+	var RecordUID corebase.UUID
 	if RecordUID, err = session.client.NewRecord(InParam.TransactionUID, InParam.RecordType, Poles); err != nil {
 		return nil, err
 	}
@@ -446,11 +446,11 @@ func (server *Server) jsonGetRecordPoles(w http.ResponseWriter, r *http.Request,
 		Where.Load(params)
 		Wheres[i] = Where
 	}
-	var Records map[string]map[string]interface{}
+	var Records map[corebase.UUID]map[string]interface{}
 	if Records, err = session.client.GetRecordsPoles(InParam.TransactionUID, InParam.RecordType, InParam.Poles, Wheres); err != nil {
 		return nil, err
 	}
-	RecordsPack := map[string]map[string]*jsonParam{}
+	RecordsPack := map[corebase.UUID]map[string]*jsonParam{}
 	for RecordUID, RecordPoles := range Records {
 		if RecordsPack[RecordUID], err = jsonPackMap(RecordPoles); err != nil {
 			return nil, err

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 type jsonErrorReturn struct {
@@ -75,7 +77,7 @@ type jsonCallResult struct {
 }
 type jsonSetRecordPoles struct {
 	TransactionUID string                 `json:"transactionUID"`
-	RecordUID    string                 `json:"recordUID"`
+	RecordUID      corebase.UUID          `json:"recordUID"`
 	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
 }
 type jsonSetRecordPolesResult struct {
@@ -83,22 +85,22 @@ type jsonSetRecordPolesResult struct {
 }
 type jsonGetRecordPoles struct {
 	TransactionUID string                  `json:"transactionUID"`
-	RecordType   string                  `json:"recordType"`
+	RecordType     string                  `json:"recordType"`
 	Poles          []string                `json:"poles"`
 	Wheres         []map[string]*jsonParam `json:"wheres,omitempty"`
 }
 type jsonGetRecordPolesResult struct {
-	Records *map[string]map[string]*jsonParam `json:"records"`
-	Error     string                            `json:"error,omitempty"`
+	Records *map[corebase.UUID]map[string]*jsonParam `json:"records"`
+	Error   string                                   `json:"error,omitempty"`
 }
 type jsonNewRecord struct {
 	TransactionUID string                 `json:"transactionUID"`
-	RecordType   string                 `json:"recordType"`
+	RecordType     string                 `json:"recordType"`
 	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
 }
 type jsonNewRecordResult struct {
-	RecordUID string `json:"recordUID"`
-	Error       string `json:"error,omitempty"`
+	RecordUID corebase.UUID `json:"recordUID"`
+	Error     string        `json:"error,omitempty"`
 }
 type jsonParam struct {
 	String *string                `json:"string,omitempty"`

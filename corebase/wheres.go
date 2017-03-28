@@ -123,7 +123,7 @@ func (dw *RecordWhereOrder) Load(Poles map[string]interface{}) error {
 }
 
 type RecordWhereSelectRecord struct {
-	RecordUID string
+	RecordUID UUID
 }
 
 func (dw *RecordWhereSelectRecord) Save() (string, map[string]interface{}, error) {
@@ -132,8 +132,8 @@ func (dw *RecordWhereSelectRecord) Save() (string, map[string]interface{}, error
 
 func (dw *RecordWhereSelectRecord) Load(Poles map[string]interface{}) error {
 	var ok bool
-	var UID string
-	if UID, ok = Poles["RecordWhere.SelectRecord.RecordUID"].(string); ok {
+	var UID UUID
+	if UID, ok = Poles["RecordWhere.SelectRecord.RecordUID"].(UUID); ok {
 		dw.RecordUID = UID
 	}
 	return nil
@@ -172,10 +172,10 @@ func (dw *RecordWhereCompare) Load(Poles map[string]interface{}) error {
 		return errors.New("not found RecordWhere.Compare.Operation")
 	}
 	poles := map[string]bool{
-		"RecordWhere.Compare.StringValue":       true,
-		"RecordWhere.Compare.Int64Value":        true,
-		"RecordWhere.Compare.DateValue":         true,
-		"RecordWhere.Compare.DateTimeValue":     true,
+		"RecordWhere.Compare.StringValue":     true,
+		"RecordWhere.Compare.Int64Value":      true,
+		"RecordWhere.Compare.DateValue":       true,
+		"RecordWhere.Compare.DateTimeValue":   true,
 		"RecordWhere.Compare.RecordLinkValue": true,
 	}
 	for p, value := range Poles {

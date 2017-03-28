@@ -7,31 +7,51 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type UUID struct {
+type UUID string
+
+const NullUUID UUID = "00000000-0000-0000-0000-000000000000"
+
+/*struct {
 	uuid.UUID
-}
+}*/
 
 func NewUUID() UUID {
-	return UUID{UUID: uuid.NewV4()}
+	return UUID(uuid.NewV4().String())
+}
+func (u UUID) String() string {
+	return string(u)
 }
 
 func (u *UUID) Value() (driver.Value, error) {
 	if u == nil {
 		return nil, nil
 	}
-	return u.String(), nil
+	return string(*u), nil
 }
 func (u *UUID) Scan(value interface{}) error {
-	bytes, ok := value.([]byte)
-	if ok && len(bytes) == 16 {
-		u.UnmarshalBinary(bytes)
-		return nil
-	}
-	strings, ok := value.(string)
-	if ok {
-		if err := u.UnmarshalText(([]byte)(strings)); err != nil {
+
+	if bytes, ok := value.([]byte); ok && len(bytes) == 16 {
+		var id uuid.UUID
+		if err := id.UnmarshalBinary(bytes); err != nil {
 			return err
 		}
+		*u = UUID(id.String())
+		return nil
+	} else if bytes, ok := value.([]byte); ok && len(bytes) == 36 {
+		var id uuid.UUID
+		if err := id.UnmarshalText(bytes); err != nil {
+			return err
+		}
+		*u = UUID(id.String())
+		return nil
+	}
+	if strings, ok := value.(string); ok {
+		var id uuid.UUID
+		if err := id.UnmarshalText(([]byte)(strings)); err != nil {
+			return err
+		}
+		*u = UUID(id.String())
+		return nil
 	}
 	return errors.New("convert error UUID")
 }

@@ -14,7 +14,7 @@ type IClient interface {
 	RollbackTransaction(TransactionUID string) error
 	Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, errResult error)
 	Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error)
-	GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error)
-	NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (string, error)
-	SetRecordPoles(TransactionUID string, RecordUID string, poles map[string]interface{}) error
+	GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error)
+	NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (corebase.UUID, error)
+	SetRecordPoles(TransactionUID string, RecordUID corebase.UUID, poles map[string]interface{}) error
 }

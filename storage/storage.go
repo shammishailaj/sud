@@ -99,7 +99,7 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 	var hash string
 	hash = hex.EncodeToString(hashStream.Sum([]byte{}))
 	p := path.Join(storage.root, storageDir, hash[len(hash)-2:], hash[len(hash)-4:len(hash)-2], hash)
-	var docs map[string]map[string]interface{}
+	var docs map[corebase.UUID]map[string]interface{}
 
 	if docs, err = storage.client.GetRecordsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{
 		&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},

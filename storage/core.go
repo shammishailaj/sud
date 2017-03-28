@@ -36,7 +36,7 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 			return callpull.Result{Result: nil, Error: errors.New("parameter Storage is not string")}, nil
 		}
 	}
-	var docs map[string]map[string]interface{}
+	var docs map[corebase.UUID]map[string]interface{}
 	if docs, err = cr.GetRecordsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
 		return callpull.Result{Result: nil, Error: err}, nil
 	}

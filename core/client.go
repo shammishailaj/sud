@@ -51,13 +51,13 @@ func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[
 func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
 	return client.core.Call(client.configurationName, Name, Params, TimeoutWait)
 }
-func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
+func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
 	return client.core.GetRecordsPoles(TransactionUID, client.configurationName, RecordType, poles, wheres)
 }
-func (client *Client) SetRecordPoles(TransactionUID string, RecordUID string, poles map[string]interface{}) error {
+func (client *Client) SetRecordPoles(TransactionUID string, RecordUID corebase.UUID, poles map[string]interface{}) error {
 	return client.core.SetRecordPoles(TransactionUID, client.configurationName, RecordUID, poles)
 }
-func (client *Client) NewRecord(TransactionUID string, RecordType string, Poles map[string]interface{}) (string, error) {
+func (client *Client) NewRecord(TransactionUID string, RecordType string, Poles map[string]interface{}) (corebase.UUID, error) {
 	return client.core.NewRecord(TransactionUID, client.configurationName, RecordType, Poles)
 }
 

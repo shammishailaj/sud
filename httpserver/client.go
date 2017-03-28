@@ -167,7 +167,7 @@ func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWa
 	}
 	return callpull.Result{Result: Result, Error: callpullError}, nil
 }
-func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
+func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	w := make([]map[string]*jsonParam, len(wheres), len(wheres))
 	for i, where := range wheres {
@@ -194,7 +194,7 @@ func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, 
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	Records := map[string]map[string]interface{}{}
+	Records := map[corebase.UUID]map[string]interface{}{}
 	if result.Records != nil {
 		for RecordUID, Poles := range *result.Records {
 			if Records[RecordUID], err = jsonUnPackMap(Poles); err != nil {
@@ -204,7 +204,7 @@ func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, 
 	}
 	return Records, nil
 }
-func (client *Client) NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (string, error) {
+func (client *Client) NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (corebase.UUID, error) {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
@@ -219,7 +219,7 @@ func (client *Client) NewRecord(TransactionUID string, RecordType string, poles 
 	}
 	return result.RecordUID, nil
 }
-func (client *Client) SetRecordPoles(TransactionUID string, RecordUID string, poles map[string]interface{}) error {
+func (client *Client) SetRecordPoles(TransactionUID string, RecordUID corebase.UUID, poles map[string]interface{}) error {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {

@@ -32,13 +32,13 @@ func (t *transaction) Query(query string, args ...interface{}) (*sql.Rows, error
 func (t *transaction) QueryRow(query string, args ...interface{}) *sql.Row {
 	return t.tx.QueryRow(query, args...)
 }
-func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[string]map[string]interface{}, error) {
+func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	var config *Configuration
 	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
 		return nil, err
 	}
-	var RecordUID string
+	var RecordUID corebase.UUID
 	state := NewQueryState()
 	state.AddPoleSQL(`"Record"."__RecordUID"`, &RecordUID)
 	for poleName, pi := range config.GetPolesInfo(RecordType, poles) {
@@ -62,7 +62,7 @@ func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType stri
 	}
 	defer rows.Close()
 	values := state.GetPoleValueArray()
-	Records := map[string]map[string]interface{}{}
+	Records := map[corebase.UUID]map[string]interface{}{}
 	for rows.Next() {
 		if err = rows.Scan(values...); err != nil {
 			return nil, err
@@ -75,7 +75,7 @@ func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType stri
 	}
 	return Records, nil
 }
-func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID string, Poles map[string]interface{}) error {
+func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID corebase.UUID, Poles map[string]interface{}) error {
 	var err error
 	var ok bool
 	var pi corebase.IPoleInfo
@@ -138,7 +138,7 @@ func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID string
 	}
 	return nil
 }
-func (tx *transaction) NewRecord(ConfigurationName string, RecordType string, Poles map[string]interface{}) (string, error) {
+func (tx *transaction) NewRecord(ConfigurationName string, RecordType string, Poles map[string]interface{}) (corebase.UUID, error) {
 	var err error
 	var config *Configuration
 	if config, err = tx.core.LoadConfiguration(ConfigurationName); err != nil {
@@ -151,11 +151,11 @@ func (tx *transaction) NewRecord(ConfigurationName string, RecordType string, Po
 	if !ti.GetNew() {
 		return "", errors.New("new record. access denied: " + RecordType)
 	}
-	DouceumentUID := corebase.NewUUID().String()
-	_, err = tx.Exec(`INSERT INTO "Record"("__RecordUID", "RecordType", "Readonly", "DeleteRecord") VALUES ($1,$2,$3,$4)`, DouceumentUID, RecordType, false, false)
+	RecordUID := corebase.NewUUID()
+	_, err = tx.Exec(`INSERT INTO "Record"("__RecordUID", "RecordType", "Readonly", "DeleteRecord") VALUES ($1,$2,$3,$4)`, RecordUID, RecordType, false, false)
 	if err != nil {
 		return "", err
 	}
-	err = tx.SetRecordPoles(ConfigurationName, DouceumentUID, Poles)
-	return DouceumentUID, err
+	err = tx.SetRecordPoles(ConfigurationName, RecordUID, Poles)
+	return RecordUID, err
 }
