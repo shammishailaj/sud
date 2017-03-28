@@ -39,7 +39,7 @@ func (state *queryState) AddPole(poleName string, pi corebase.IPoleInfo) {
 	pti.N = -1
 	state.num++
 	state.poles[pi.GetPoleName()] = pti
-	state.AddTable(pti.TableName, `LEFT JOIN "`+pti.TableName+`" ON "`+pti.TableName+`"."__DocumentUID" = "Document"."__DocumentUID"`)
+	state.AddTable(pti.TableName, `LEFT JOIN "`+pti.TableName+`" ON "`+pti.TableName+`"."__RecordUID" = "Record"."__RecordUID"`)
 }
 func (state *queryState) AddPoleSQL(poleSQL string, link interface{}) int {
 	state.polesSQL = append(state.polesSQL, poleSQL)
@@ -183,7 +183,7 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 	}
 	return values
 }
-func (state *queryState) SetDocumentPoles(doc map[string]interface{}, values [](interface{})) error {
+func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](interface{})) error {
 	for poleName, pti := range state.poles {
 		var o corebase.Object
 		switch pti.PoleInfo.GetPoleType() {

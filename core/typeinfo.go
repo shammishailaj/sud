@@ -4,7 +4,7 @@ import "github.com/crazyprograms/sud/corebase"
 
 type TypeInfo struct {
 	ConfigurationName string
-	DocumentType      string
+	RecordType      string
 	Title             string
 	New               bool
 	Read              bool
@@ -12,7 +12,7 @@ type TypeInfo struct {
 }
 
 func (ti *TypeInfo) GetConfigurationName() string { return ti.ConfigurationName }
-func (ti *TypeInfo) GetDocumentType() string      { return ti.DocumentType }
+func (ti *TypeInfo) GetRecordType() string      { return ti.RecordType }
 func (ti *TypeInfo) GetTitle() string             { return ti.Title }
 func (ti *TypeInfo) GetNew() bool                 { return ti.New }
 func (ti *TypeInfo) GetRead() bool                { return ti.Read }

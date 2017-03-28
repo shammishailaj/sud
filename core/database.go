@@ -22,9 +22,9 @@ func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
 	case "DateTimeValue":
 		PoleDBType = `timestamp NULL`
 		break
-	case "DocumentLinkValue":
+	case "RecordLinkValue":
 		PoleDBType = `uuid NULL`
-		Q2 = `ALTER TABLE "` + info.TableName + `" ADD CONSTRAINT "` + info.TableName + `_fk_` + info.PoleName + `" FOREIGN KEY (t) REFERENCES public."Document" ("__DocumentUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;`
+		Q2 = `ALTER TABLE "` + info.TableName + `" ADD CONSTRAINT "` + info.TableName + `_fk_` + info.PoleName + `" FOREIGN KEY (t) REFERENCES public."Record" ("__RecordUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;`
 		break
 	default:
 		return errors.New("pole type error")
@@ -105,7 +105,7 @@ func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName st
 	for TableName, ti := range TablePoles {
 		var poles map[string]string
 		if poles, ok = Tables[TableName]; !ok {
-			if _, err = tx.Exec(`CREATE TABLE "` + TableName + `" ( "__DocumentUID" uuid NOT NULL, CONSTRAINT "` + TableName + `_pk_document" PRIMARY KEY ("__DocumentUID"),   CONSTRAINT "` + TableName + `_fk_document" FOREIGN KEY ("__DocumentUID") REFERENCES "Document" ("__DocumentUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION)`); err != nil {
+			if _, err = tx.Exec(`CREATE TABLE "` + TableName + `" ( "__RecordUID" uuid NOT NULL, CONSTRAINT "` + TableName + `_pk_record" PRIMARY KEY ("__RecordUID"),   CONSTRAINT "` + TableName + `_fk_record" FOREIGN KEY ("__RecordUID") REFERENCES "Record" ("__RecordUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION)`); err != nil {
 				return err
 			}
 			poles = map[string]string{}
@@ -132,13 +132,13 @@ func (core *Core) CreateDatabase() error {
 
 	//dbname := con.getDBName()
 	if _, err = tx.Exec(`
-CREATE TABLE "Document"
+CREATE TABLE "Record"
 (
-  "__DocumentUID" uuid NOT NULL,
-  "DocumentType" text,
+  "__RecordUID" uuid NOT NULL,
+  "RecordType" text,
   "Readonly" boolean NOT NULL,
-  "DeleteDocument" boolean NOT NULL,
-  CONSTRAINT "pk_document" PRIMARY KEY ("__DocumentUID")
+  "DeleteRecord" boolean NOT NULL,
+  CONSTRAINT "pk_record" PRIMARY KEY ("__RecordUID")
 )	
 	`); err != nil {
 		return err

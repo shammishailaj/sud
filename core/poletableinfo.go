@@ -22,7 +22,7 @@ func (pti *PoleTableInfo) FullPoleName(TableName string, PoleName string) string
 func (pti *PoleTableInfo) FromPoleInfo(pi corebase.IPoleInfo) error {
 	pti.Configuration = pi.GetConfigurationName()
 	s := strings.Split(pi.GetPoleName(), ".")
-	s2 := strings.Split(pi.GetDocumentType(), ".")
+	s2 := strings.Split(pi.GetRecordType(), ".")
 	if len(s) < len(s2) {
 		return errors.New("PTI:pole name error")
 	}

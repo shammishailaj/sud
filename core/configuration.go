@@ -26,27 +26,27 @@ func (conf *Configuration) GetCallInfo(CallName string) (corebase.ICallInfo, err
 	}
 	return nil, errors.New("call not found: " + CallName)
 }
-func (conf *Configuration) GetTypeInfo(DocumentType string) (corebase.ITypeInfo, error) {
-	if m, ok := conf.typesInfo[DocumentType]; ok {
+func (conf *Configuration) GetTypeInfo(RecordType string) (corebase.ITypeInfo, error) {
+	if m, ok := conf.typesInfo[RecordType]; ok {
 		return m, nil
 	}
-	return nil, errors.New("type not found: " + DocumentType)
+	return nil, errors.New("type not found: " + RecordType)
 }
-func (conf *Configuration) GetPoleInfo(DocumentType string, PoleName string) (corebase.IPoleInfo, error) {
-	if m, ok := conf.polesInfo[DocumentType]; ok {
+func (conf *Configuration) GetPoleInfo(RecordType string, PoleName string) (corebase.IPoleInfo, error) {
+	if m, ok := conf.polesInfo[RecordType]; ok {
 		if pi, ok := m[PoleName]; ok {
 			return pi, nil
 		}
 	}
 	return nil, errors.New("pole not found: " + PoleName)
 }
-func (conf *Configuration) GetPolesInfo(DocumentType string, Poles []string) map[string]corebase.IPoleInfo {
-	if m, ok := conf.polesInfo[DocumentType]; ok {
+func (conf *Configuration) GetPolesInfo(RecordType string, Poles []string) map[string]corebase.IPoleInfo {
+	if m, ok := conf.polesInfo[RecordType]; ok {
 		polesInfo := map[string]corebase.IPoleInfo{}
 		if len(Poles) != 0 {
 			for _, pole := range Poles {
 				p := strings.Split(pole, ".")
-				// Document.Table.Name.
+				// Record.Table.Name.
 				if p[len(p)-1] == "" {
 					for poleName, info := range m {
 						if strings.HasPrefix(poleName, pole) {
@@ -84,17 +84,17 @@ func (conf *Configuration) AddDependConfiguration(DependConfigurationName string
 func (conf *Configuration) AddCall(ConfigurationName string, Name string, PullName string, Call bool, Listen bool, Title string) {
 	conf.callsInfo[Name] = &CallInfo{ConfigurationName: ConfigurationName, Name: Name, PullName: PullName, Call: Call, Listen: Listen, Title: Title}
 }
-func (conf *Configuration) AddType(ConfigurationName string, DocumentType string, New bool, Read bool, Save bool, Title string) {
-	conf.typesInfo[DocumentType] = &TypeInfo{ConfigurationName: ConfigurationName, DocumentType: DocumentType, New: New, Read: Read, Save: Save, Title: Title}
+func (conf *Configuration) AddType(ConfigurationName string, RecordType string, New bool, Read bool, Save bool, Title string) {
+	conf.typesInfo[RecordType] = &TypeInfo{ConfigurationName: ConfigurationName, RecordType: RecordType, New: New, Read: Read, Save: Save, Title: Title}
 }
-func (conf *Configuration) AddPole(ConfigurationName string, DocumentType string, PoleName string, PoleType string, Default corebase.Object, IndexType string, Checker corebase.IPoleChecker, New bool, Edit bool, Title string) {
-	_, ok := conf.polesInfo[DocumentType]
+func (conf *Configuration) AddPole(ConfigurationName string, RecordType string, PoleName string, PoleType string, Default corebase.Object, IndexType string, Checker corebase.IPoleChecker, New bool, Edit bool, Title string) {
+	_, ok := conf.polesInfo[RecordType]
 	if !ok {
-		conf.polesInfo[DocumentType] = make(map[string]corebase.IPoleInfo)
+		conf.polesInfo[RecordType] = make(map[string]corebase.IPoleInfo)
 	}
-	conf.polesInfo[DocumentType][PoleName] = &PoleInfo{
+	conf.polesInfo[RecordType][PoleName] = &PoleInfo{
 		ConfigurationName: ConfigurationName,
-		DocumentType:      DocumentType,
+		RecordType:      RecordType,
 		PoleName:          PoleName,
 		PoleType:          PoleType,
 		Default:           Default,
