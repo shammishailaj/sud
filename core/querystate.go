@@ -2,10 +2,11 @@ package core
 
 import (
 	"database/sql"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
+
+	"reflect"
 
 	"github.com/crazyprograms/sud/corebase"
 )
@@ -71,7 +72,7 @@ func (state *queryState) AddParamObject(value corebase.Object) (string, error) {
 	case corebase.UUID:
 		return state.AddParam(v), nil
 	default:
-		return "", errors.New("type not support")
+		return "", &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "queryState:AddParamObject", Name: reflect.TypeOf(value).Name(), Info: "type not support"}
 	}
 }
 func (state *queryState) AddOrder(order string) {
@@ -94,7 +95,7 @@ func (state *queryState) GenSQLTop() (string, error) {
 	if state.Skip == 0 {
 		return " TOP " + strconv.Itoa(state.Count) + " ", nil
 	}
-	return "", errors.New("Skip items can only be ordered in the table")
+	return "", &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "GenSQLTop", Info: "Skip items can only be ordered in the table"}
 }
 func (state *queryState) GenSQLOrder() string {
 	if len(state.orders) == 0 {
@@ -190,7 +191,8 @@ func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](in
 		case "BooleanValue":
 			v, ok := values[pti.N].(*sql.NullBool)
 			if !ok {
-				return errors.New("pole read error " + poleName)
+				return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "SetRecordPoles", Name: poleName, Info: "pole read error " + pti.PoleInfo.GetPoleType()}
+
 			}
 			if !v.Valid {
 				o = corebase.NULL
@@ -200,7 +202,7 @@ func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](in
 		case "StringValue":
 			v, ok := values[pti.N].(*sql.NullString)
 			if !ok {
-				return errors.New("pole read error " + poleName)
+				return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "SetRecordPoles", Name: poleName, Info: "pole read error " + pti.PoleInfo.GetPoleType()}
 			}
 			if !v.Valid {
 				o = corebase.NULL
@@ -210,7 +212,7 @@ func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](in
 		case "DateValue":
 			v, ok := values[pti.N].(**time.Time)
 			if !ok {
-				return errors.New("pole read error " + poleName)
+				return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "SetRecordPoles", Name: poleName, Info: "pole read error " + pti.PoleInfo.GetPoleType()}
 			}
 			if *v == nil {
 				o = corebase.NULL
@@ -220,7 +222,7 @@ func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](in
 		case "Int64Value":
 			v, ok := values[pti.N].(*sql.NullInt64)
 			if !ok {
-				return errors.New("pole read error " + poleName)
+				return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "SetRecordPoles", Name: poleName, Info: "pole read error " + pti.PoleInfo.GetPoleType()}
 			}
 			if !v.Valid {
 				o = corebase.NULL

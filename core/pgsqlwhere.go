@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/crazyprograms/sud/corebase"
@@ -107,7 +106,7 @@ func pwRecordWhereCompare(conf *Configuration, RecordType string, state *querySt
 	case `NotMore`:
 		state.AddWhere(`"` + pti.TableName + `"."` + pti.PoleName + `" <= ` + state.AddParam(w.Value))
 	default:
-		return errors.New(w.Operation + ` not implemented`)
+		return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "Compare", Name: w.Operation, Info: w.Operation + ` not implemented`}
 	}
 	return nil
 }

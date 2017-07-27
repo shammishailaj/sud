@@ -14,7 +14,7 @@ import (
 
 	"strings"
 
-	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/callpull"
 	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/corebase"
 )
@@ -33,14 +33,14 @@ func (client *Client) httpJsonClient(Name string, InParam interface{}, OutParam 
 		return err
 	}
 	var r *http.Response
-	fmt.Println("send:", string(outBuff))
+	fmt.Println("send("+client.url+Name+"):", string(outBuff))
 	if r, err = client.http.Post(client.url+Name, "application/json", bytes.NewReader(outBuff)); err != nil {
 		return err
 	}
 	if _, err = inBuff.ReadFrom(r.Body); err != nil {
 		return err
 	}
-	fmt.Println("recv:", string(inBuff.Bytes()))
+	fmt.Println("recv("+client.url+Name+"):", string(inBuff.Bytes()))
 	if err = json.Unmarshal(inBuff.Bytes(), OutParam); err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func NewClient(url, login, password, configurationName string) (*Client, error) 
 	}
 	client := &Client{url: url, jar: jar, http: http.Client{Jar: jar}}
 	result := jsonLoginResult{}
-	if err = client.httpJsonClient("/json/login", jsonLogin{Login: login, Password: login, ConfigurationName: configurationName}, &result); err != nil {
+	if err = client.httpJsonClient("/json/login", jsonLogin{Login: login, Password: password, ConfigurationName: configurationName}, &result); err != nil {
 		return nil, err
 	}
 	if !result.Login {
@@ -130,31 +130,45 @@ func (client *Client) listenResult(Result chan callpull.Result, TimeoutWait time
 		return errors.New("timeout error")
 	}
 }
-func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, errResult error) {
+
+func (client *Client) Listen(Name string, TimeoutWait time.Duration) (Param map[string]interface{}, ResultUID string, errResult error) {
 	var err error
 	result := jsonListenResult{}
 	if err = client.httpJsonClient("/json/listen", &jsonListen{Name: Name, TimeoutWait: int(TimeoutWait.Nanoseconds() / 1000)}, &result); err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 	if result.Error != "" {
-		return nil, nil, errors.New(result.Error)
+		return nil, "", errors.New(result.Error)
 	}
 	var p map[string]interface{}
 	if p, err = jsonUnPackMap(*result.Param); err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
-	ResultChan := make(chan callpull.Result)
-	go client.listenResult(ResultChan, TimeoutWait, result.ResultUID)
-	return p, ResultChan, nil
+	return p, result.ResultUID, nil
 }
-func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
+func (client *Client) ListenResult(ResultUID string, Result interface{}, ResultError error) error {
+	var err error
+	result := jsonListenReturnResult{}
+	var ResultPack *jsonParam
+	if ResultPack, err = jsonPack(Result); err != nil {
+		return err
+	}
+	if err = client.httpJsonClient("/json/listenreturn", &jsonListenReturn{ResultUID: ResultUID, Result: ResultPack}, &result); err != nil {
+		return err
+	}
+	if result.Error != "" {
+		return errors.New(result.Error)
+	}
+	return nil
+}
+func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWait time.Duration, AccessResultUID string) (callpull.Result, error) {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(Params); err != nil {
 		return callpull.Result{}, err
 	}
 	result := jsonCallResult{}
-	if err = client.httpJsonClient("/json/call", &jsonCall{Name: Name, Params: &m, TimeoutWait: int(TimeoutWait / time.Millisecond)}, &result); err != nil {
+	if err = client.httpJsonClient("/json/call", &jsonCall{Name: Name, Params: &m, TimeoutWait: int(TimeoutWait / time.Millisecond), AccessResultUID: AccessResultUID}, &result); err != nil {
 		return callpull.Result{}, err
 	}
 	var Result interface{}
@@ -167,7 +181,7 @@ func (client *Client) Call(Name string, Params map[string]interface{}, TimeoutWa
 	}
 	return callpull.Result{Result: Result, Error: callpullError}, nil
 }
-func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
+func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, poles []string, wheres []corebase.IRecordWhere, AccessResultUID string) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	w := make([]map[string]*jsonParam, len(wheres), len(wheres))
 	for i, where := range wheres {
@@ -188,7 +202,7 @@ func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, 
 		}
 	}
 	result := jsonGetRecordPolesResult{}
-	if err = client.httpJsonClient("/json/getrecordpoles", &jsonGetRecordPoles{TransactionUID: TransactionUID, RecordType: RecordType, Poles: poles, Wheres: w}, &result); err != nil {
+	if err = client.httpJsonClient("/json/getrecordpoles", &jsonGetRecordPoles{TransactionUID: TransactionUID, RecordType: RecordType, Poles: poles, Wheres: w, AccessResultUID: AccessResultUID}, &result); err != nil {
 		return nil, err
 	}
 	if result.Error != "" {
@@ -204,14 +218,14 @@ func (client *Client) GetRecordsPoles(TransactionUID string, RecordType string, 
 	}
 	return Records, nil
 }
-func (client *Client) NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}) (corebase.UUID, error) {
+func (client *Client) NewRecord(TransactionUID string, RecordType string, poles map[string]interface{}, AccessResultUID string) (corebase.UUID, error) {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
 		return "", err
 	}
 	result := jsonNewRecordResult{}
-	if err = client.httpJsonClient("/json/newrecord", &jsonNewRecord{TransactionUID: TransactionUID, RecordType: RecordType, Poles: &m}, &result); err != nil {
+	if err = client.httpJsonClient("/json/newrecord", &jsonNewRecord{TransactionUID: TransactionUID, RecordType: RecordType, Poles: &m, AccessResultUID: AccessResultUID}, &result); err != nil {
 		return "", err
 	}
 	if result.Error != "" {
@@ -219,14 +233,37 @@ func (client *Client) NewRecord(TransactionUID string, RecordType string, poles 
 	}
 	return result.RecordUID, nil
 }
-func (client *Client) SetRecordPoles(TransactionUID string, RecordUID corebase.UUID, poles map[string]interface{}) error {
+func (client *Client) SetRecordPoles(TransactionUID string, RecordUID corebase.UUID, poles map[string]interface{}, AccessResultUID string) error {
 	var err error
 	var m map[string]*jsonParam
 	if m, err = jsonPackMap(poles); err != nil {
 		return err
 	}
 	result := jsonSetRecordPolesResult{}
-	if err = client.httpJsonClient("/json/setrecordpoles", &jsonSetRecordPoles{TransactionUID: TransactionUID, RecordUID: RecordUID, Poles: &m}, &result); err != nil {
+	if err = client.httpJsonClient("/json/setrecordpoles", &jsonSetRecordPoles{TransactionUID: TransactionUID, RecordUID: RecordUID, Poles: &m, AccessResultUID: AccessResultUID}, &result); err != nil {
+		return err
+	}
+	if result.Error != "" {
+		return errors.New(result.Error)
+	}
+	return nil
+}
+
+func (client *Client) GetRecordAccess(TransactionUID string, RecordUID corebase.UUID, AccessResultUID string) (string, error) {
+	var err error
+	result := jsonGetRecordAccessResult{}
+	if err = client.httpJsonClient("/json/getrecordaccess", &jsonGetRecordAccess{TransactionUID: TransactionUID, RecordUID: RecordUID, AccessResultUID: AccessResultUID}, &result); err != nil {
+		return "", err
+	}
+	if result.Error != "" {
+		return "", errors.New(result.Error)
+	}
+	return result.Access, nil
+}
+func (client *Client) SetRecordAccess(TransactionUID string, RecordUID corebase.UUID, NewAccess string, AccessResultUID string) error {
+	var err error
+	result := jsonSetRecordAccessResult{}
+	if err = client.httpJsonClient("/json/setrecordaccess", &jsonSetRecordAccess{TransactionUID: TransactionUID, RecordUID: RecordUID, NewAccess: NewAccess, AccessResultUID: AccessResultUID}, &result); err != nil {
 		return err
 	}
 	if result.Error != "" {

@@ -12,7 +12,7 @@ import (
 
 	"fmt"
 
-	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/callpull"
 	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/core"
 	"github.com/crazyprograms/sud/corebase"
@@ -187,8 +187,8 @@ func (session *Session) getResult(resultUID string) chan callpull.Result {
 	}
 	return nil
 }
-func (server *Server) Start() {
-	http.ListenAndServe(server.address, server)
+func (server *Server) Start() error {
+	return http.ListenAndServe(server.address, server)
 }
 func (server *Server) jsonError(w http.ResponseWriter, r *http.Request, err error) interface{} {
 	return &jsonErrorReturn{Error: err.Error()}
@@ -196,11 +196,11 @@ func (server *Server) jsonError(w http.ResponseWriter, r *http.Request, err erro
 func (server *Server) jsonLogin(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonLogin)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if InParam.Login == "" || InParam.Password == "" || InParam.ConfigurationName == "" {
 		return nil, errors.New("param error")
 	}
@@ -215,11 +215,11 @@ func (server *Server) jsonLogin(w http.ResponseWriter, r *http.Request, In inter
 	return jsonLoginResult{Login: true}, nil
 }
 func (server *Server) jsonGetConfiguration(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -228,11 +228,11 @@ func (server *Server) jsonGetConfiguration(w http.ResponseWriter, r *http.Reques
 func (server *Server) jsonCall(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonCall)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -241,7 +241,7 @@ func (server *Server) jsonCall(w http.ResponseWriter, r *http.Request, In interf
 		return nil, err
 	}
 	var r1 callpull.Result
-	if r1, err = session.client.Call(InParam.Name, Params, time.Duration(InParam.TimeoutWait)*time.Millisecond); err != nil {
+	if r1, err = session.client.Call(InParam.Name, Params, time.Duration(InParam.TimeoutWait)*time.Millisecond, InParam.AccessResultUID); err != nil {
 		return nil, err
 	}
 	var callPullError string
@@ -256,11 +256,11 @@ func (server *Server) jsonCall(w http.ResponseWriter, r *http.Request, In interf
 }
 func (server *Server) jsonBeginTransaction(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -272,11 +272,11 @@ func (server *Server) jsonBeginTransaction(w http.ResponseWriter, r *http.Reques
 }
 func (server *Server) jsonCommitTransaction(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	InParam := In.(*jsonCommitTransaction)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -287,11 +287,11 @@ func (server *Server) jsonCommitTransaction(w http.ResponseWriter, r *http.Reque
 }
 func (server *Server) jsonRollbackTransaction(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	InParam := In.(*jsonRollbackTransaction)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -302,33 +302,35 @@ func (server *Server) jsonRollbackTransaction(w http.ResponseWriter, r *http.Req
 }
 func (server *Server) jsonListen(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	InParam := In.(*jsonListen)
-
-	session.lock.RLock()
-	defer session.lock.RUnlock()
-	var err error
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	var err error
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
 	if InParam.Name == "" || InParam.TimeoutWait < 0 {
 		return nil, errors.New("param error")
 	}
-	var ResultChan chan callpull.Result
+	var ResultUID string
 	var Params map[string]interface{}
 	var PParams map[string]*jsonParam
-	if Params, ResultChan, err = session.client.Listen(InParam.Name, time.Millisecond*time.Duration(InParam.TimeoutWait)); err != nil {
+	if Params, ResultUID, err = session.client.Listen(InParam.Name, time.Millisecond*time.Duration(InParam.TimeoutWait)); err != nil {
 		return nil, err
 	}
 	if PParams, err = jsonPackMap(Params); err != nil {
 		return nil, err
 	}
-	return &jsonListenResult{Param: &PParams, ResultUID: session.setResult(ResultChan)}, nil
+	return &jsonListenResult{Param: &PParams, ResultUID: ResultUID}, nil
 }
 func (server *Server) jsonListenResult(w http.ResponseWriter, request *http.Request, In interface{}, session *Session) (OutParam interface{}, resultErr error) {
 	InParam := In.(*jsonListenReturn)
 	OutParam = nil
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
 	session.lock.RLock()
 	defer session.lock.RUnlock()
 	defer func() {
@@ -337,10 +339,6 @@ func (server *Server) jsonListenResult(w http.ResponseWriter, request *http.Requ
 		}
 	}()
 	var err error
-	if session == nil {
-		resultErr = errors.New("session not found")
-		return
-	}
 	if !session.auth {
 		resultErr = errors.New("not login")
 		return
@@ -369,11 +367,11 @@ func (server *Server) jsonListenResult(w http.ResponseWriter, request *http.Requ
 func (server *Server) jsonSetRecordPoles(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonSetRecordPoles)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -381,7 +379,7 @@ func (server *Server) jsonSetRecordPoles(w http.ResponseWriter, r *http.Request,
 	if Poles, err = jsonUnPackMap(*InParam.Poles); err != nil {
 		return nil, err
 	}
-	if err = session.client.SetRecordPoles(InParam.TransactionUID, InParam.RecordUID, Poles); err != nil {
+	if err = session.client.SetRecordPoles(InParam.TransactionUID, InParam.RecordUID, Poles, InParam.AccessResultUID); err != nil {
 		return nil, err
 	}
 	return jsonSetRecordPolesResult{}, nil
@@ -389,11 +387,11 @@ func (server *Server) jsonSetRecordPoles(w http.ResponseWriter, r *http.Request,
 func (server *Server) jsonNewRecord(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonNewRecord)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -402,7 +400,7 @@ func (server *Server) jsonNewRecord(w http.ResponseWriter, r *http.Request, In i
 		return nil, err
 	}
 	var RecordUID corebase.UUID
-	if RecordUID, err = session.client.NewRecord(InParam.TransactionUID, InParam.RecordType, Poles); err != nil {
+	if RecordUID, err = session.client.NewRecord(InParam.TransactionUID, InParam.RecordType, Poles, InParam.AccessResultUID); err != nil {
 		return nil, err
 	}
 	return jsonNewRecordResult{RecordUID: RecordUID}, nil
@@ -410,11 +408,11 @@ func (server *Server) jsonNewRecord(w http.ResponseWriter, r *http.Request, In i
 func (server *Server) jsonGetRecordPoles(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
 	var err error
 	InParam := In.(*jsonGetRecordPoles)
-	session.lock.RLock()
-	defer session.lock.RUnlock()
 	if session == nil {
 		return nil, errors.New("session not found")
 	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
 	if !session.auth {
 		return nil, errors.New("not login")
 	}
@@ -447,7 +445,7 @@ func (server *Server) jsonGetRecordPoles(w http.ResponseWriter, r *http.Request,
 		Wheres[i] = Where
 	}
 	var Records map[corebase.UUID]map[string]interface{}
-	if Records, err = session.client.GetRecordsPoles(InParam.TransactionUID, InParam.RecordType, InParam.Poles, Wheres); err != nil {
+	if Records, err = session.client.GetRecordsPoles(InParam.TransactionUID, InParam.RecordType, InParam.Poles, Wheres, InParam.AccessResultUID); err != nil {
 		return nil, err
 	}
 	RecordsPack := map[corebase.UUID]map[string]*jsonParam{}
@@ -458,7 +456,39 @@ func (server *Server) jsonGetRecordPoles(w http.ResponseWriter, r *http.Request,
 	}
 	return jsonGetRecordPolesResult{Records: &RecordsPack}, nil
 }
-
+func (server *Server) GetRecordAccess(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	var err error
+	InParam := In.(*jsonGetRecordAccess)
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	var Access string
+	if Access, err = session.client.GetRecordAccess(InParam.TransactionUID, InParam.RecordUID, InParam.AccessResultUID); err != nil {
+		return nil, err
+	}
+	return jsonGetRecordAccessResult{Access: Access}, nil
+}
+func (server *Server) SetRecordAccess(w http.ResponseWriter, r *http.Request, In interface{}, session *Session) (interface{}, error) {
+	var err error
+	InParam := In.(*jsonSetRecordAccess)
+	if session == nil {
+		return nil, errors.New("session not found")
+	}
+	session.lock.RLock()
+	defer session.lock.RUnlock()
+	if !session.auth {
+		return nil, errors.New("not login")
+	}
+	if err = session.client.SetRecordAccess(InParam.TransactionUID, InParam.RecordUID, InParam.NewAccess, InParam.AccessResultUID); err != nil {
+		return nil, err
+	}
+	return jsonSetRecordAccessResult{}, nil
+}
 func NewServer(c *core.Core, Address string) *Server {
 	s := &Server{
 		core:              c,

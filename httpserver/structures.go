@@ -66,9 +66,10 @@ type jsonRollbackTransactionResult struct {
 }
 
 type jsonCall struct {
-	Name        string                 `json:"name"`
-	Params      *map[string]*jsonParam `json:"params,omitempty"`
-	TimeoutWait int                    `json:"timeoutWait"` //в милесекундах
+	Name            string                 `json:"name"`
+	Params          *map[string]*jsonParam `json:"params,omitempty"`
+	TimeoutWait     int                    `json:"timeoutWait"` //в милесекундах
+	AccessResultUID string                 `json:"accessResultUID,omitempty"`
 }
 type jsonCallResult struct {
 	Result        *jsonParam `json:"result"`
@@ -76,27 +77,48 @@ type jsonCallResult struct {
 	Error         string     `json:"error,omitempty"`
 }
 type jsonSetRecordPoles struct {
-	TransactionUID string                 `json:"transactionUID"`
-	RecordUID      corebase.UUID          `json:"recordUID"`
-	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
+	TransactionUID  string                 `json:"transactionUID"`
+	RecordUID       corebase.UUID          `json:"recordUID"`
+	Poles           *map[string]*jsonParam `json:"poles,omitempty"`
+	AccessResultUID string                 `json:"accessResultUID,omitempty"`
 }
 type jsonSetRecordPolesResult struct {
 	Error string `json:"error,omitempty"`
 }
+type jsonGetRecordAccess struct {
+	TransactionUID  string        `json:"transactionUID"`
+	RecordUID       corebase.UUID `json:"recordUID"`
+	AccessResultUID string        `json:"accessResultUID,omitempty"`
+}
+type jsonGetRecordAccessResult struct {
+	Access string `json:"access"`
+	Error  string `json:"error,omitempty"`
+}
+type jsonSetRecordAccess struct {
+	TransactionUID  string        `json:"transactionUID"`
+	RecordUID       corebase.UUID `json:"recordUID"`
+	NewAccess       string        `json:"newAccess"`
+	AccessResultUID string        `json:"accessResultUID,omitempty"`
+}
+type jsonSetRecordAccessResult struct {
+	Error string `json:"error,omitempty"`
+}
 type jsonGetRecordPoles struct {
-	TransactionUID string                  `json:"transactionUID"`
-	RecordType     string                  `json:"recordType"`
-	Poles          []string                `json:"poles"`
-	Wheres         []map[string]*jsonParam `json:"wheres,omitempty"`
+	TransactionUID  string                  `json:"transactionUID"`
+	RecordType      string                  `json:"recordType"`
+	Poles           []string                `json:"poles"`
+	Wheres          []map[string]*jsonParam `json:"wheres,omitempty"`
+	AccessResultUID string                  `json:"accessResultUID,omitempty"`
 }
 type jsonGetRecordPolesResult struct {
 	Records *map[corebase.UUID]map[string]*jsonParam `json:"records"`
 	Error   string                                   `json:"error,omitempty"`
 }
 type jsonNewRecord struct {
-	TransactionUID string                 `json:"transactionUID"`
-	RecordType     string                 `json:"recordType"`
-	Poles          *map[string]*jsonParam `json:"poles,omitempty"`
+	TransactionUID  string                 `json:"transactionUID"`
+	RecordType      string                 `json:"recordType"`
+	Poles           *map[string]*jsonParam `json:"poles,omitempty"`
+	AccessResultUID string                 `json:"accessResultUID,omitempty"`
 }
 type jsonNewRecordResult struct {
 	RecordUID corebase.UUID `json:"recordUID"`

@@ -16,7 +16,7 @@ import (
 
 	"crypto/sha1"
 
-	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/callpull"
 	"github.com/crazyprograms/sud/client"
 	"github.com/crazyprograms/sud/corebase"
 )
@@ -45,7 +45,7 @@ func (storage *Storage) loopGetStream() {
 	//var err error
 	var ok bool
 	for !storage.close {
-		Param, Result, err := storage.client.Listen("Storage."+storage.name+".GetStream", time.Second*10)
+		Param, ResultUID, err := storage.client.Listen("Storage."+storage.name+".GetStream", time.Second*10)
 		if err == callpull.ErrorTimeout {
 			continue
 		}
@@ -57,27 +57,27 @@ func (storage *Storage) loopGetStream() {
 		var Hash string
 		var value interface{}
 		if value, ok = Param["TransactionUID"]; !ok {
-			Result <- callpull.Result{Result: nil, Error: errors.New("not found param TransactionUID")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: nil, Error: errors.New("not found param TransactionUID")}, nil)
 			continue
 		}
 		if TransactionUID, ok = value.(string); !ok {
-			Result <- callpull.Result{Result: nil, Error: errors.New("not string param TransactionUID")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: nil, Error: errors.New("not string param TransactionUID")}, nil)
 			continue
 		}
 		if value, ok = Param["Hash"]; !ok {
-			Result <- callpull.Result{Result: nil, Error: errors.New("not found param Hash")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: nil, Error: errors.New("not found param Hash")}, nil)
 			continue
 		}
 		if Hash, ok = value.(string); !ok {
-			Result <- callpull.Result{Result: nil, Error: errors.New("not string param Hash")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: nil, Error: errors.New("not string param Hash")}, nil)
 			continue
 		}
 		var r interface{}
 		if r, err = storage.getStream(TransactionUID, Hash); err != nil {
-			Result <- callpull.Result{Result: nil, Error: err}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: nil, Error: err}, nil)
 			continue
 		}
-		Result <- callpull.Result{Result: r, Error: nil}
+		storage.client.ListenResult(ResultUID, callpull.Result{Result: r, Error: nil}, nil)
 	}
 }
 func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string, error) {
@@ -103,7 +103,7 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 
 	if docs, err = storage.client.GetRecordsPoles(TransactionUID, "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{
 		&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: hash},
-	}); err != nil {
+	}, ""); err != nil {
 		return "", err
 	}
 	for _, Poles := range docs {
@@ -120,7 +120,7 @@ func (storage *Storage) setStream(TransactionUID string, Stream []byte) (string,
 		"Storage.Stream.Storage":  storage.name,
 		"Storage.Stream.Priority": int64(0),
 		"Storage.Stream.Size":     int64(len(Stream)),
-	}); err != nil {
+	}, ""); err != nil {
 		return "", err
 	}
 	return hash, nil
@@ -130,7 +130,7 @@ func (storage *Storage) loopSetStream() {
 	//var err error
 	var ok bool
 	for !storage.close {
-		Param, Result, err := storage.client.Listen("Storage."+storage.name+".SetStream", time.Second*10)
+		Param, ResultUID, err := storage.client.Listen("Storage."+storage.name+".SetStream", time.Second*10)
 		if err == callpull.ErrorTimeout {
 			continue
 		}
@@ -142,28 +142,28 @@ func (storage *Storage) loopSetStream() {
 		var Stream []byte
 		var value interface{}
 		if value, ok = Param["TransactionUID"]; !ok {
-			Result <- callpull.Result{Result: "", Error: errors.New("not found param TransactionUID")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: "", Error: errors.New("not found param TransactionUID")}, nil)
 			continue
 		}
 		if TransactionUID, ok = value.(string); !ok {
-			Result <- callpull.Result{Result: "", Error: errors.New("not string param TransactionUID")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: "", Error: errors.New("not string param TransactionUID")}, nil)
 			continue
 		}
 		if value, ok = Param["Stream"]; !ok {
-			Result <- callpull.Result{Result: "", Error: errors.New("not found param Hash")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: "", Error: errors.New("not found param Hash")}, nil)
 			continue
 		}
 		if Stream, ok = value.([]byte); !ok {
-			Result <- callpull.Result{Result: "", Error: errors.New("not string param Hash")}
+			storage.client.ListenResult(ResultUID, callpull.Result{Result: "", Error: errors.New("not string param Hash")}, nil)
 			continue
 		}
 
 		var Hash string
 		if Hash, err = storage.setStream(TransactionUID, Stream); err != nil {
-			Result <- callpull.Result{Result: "", Error: err}
+			storage.client.ListenResult(ResultUID, "", err)
 			continue
 		}
-		Result <- callpull.Result{Result: Hash, Error: nil} /**/
+		storage.client.ListenResult(ResultUID, Hash, nil) /**/
 	}
 }
 func (storage *Storage) start() {

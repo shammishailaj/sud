@@ -14,9 +14,10 @@ type ITypeInfo interface {
 	GetConfigurationName() string
 	GetRecordType() string
 	GetTitle() string
-	GetNew() bool
-	GetRead() bool
-	GetSave() bool
+	GetAccessType() string
+	GetAccessNew() string
+	GetAccessRead() string
+	GetAccessSave() string
 }
 
 type IPoleInfo interface {
@@ -25,9 +26,8 @@ type IPoleInfo interface {
 	GetPoleName() string
 	GetPoleType() string
 	GetTitle() string
-	GetNew() bool
-	GetEdit() bool
-	GetRemove() bool
+	GetAccessRead() string
+	GetAccessWrite() string
 	GetDefault() Object
 	GetIndexType() string
 	GetChecker() IPoleChecker
@@ -36,7 +36,18 @@ type ICallInfo interface {
 	GetConfigurationName() string
 	GetTitle() string
 	GetName() string
-	GetCall() bool
 	GetPullName() string
-	GetListen() bool
+	GetAccessCall() string
+	GetAccessListen() string
+}
+
+type IAccess interface {
+	CheckAccess(Access string) bool
+	Users() []IUser
+}
+
+type IUser interface {
+	IAccess
+	GetLogin() string
+	GetCheckPassword(Password string) bool
 }

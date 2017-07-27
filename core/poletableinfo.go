@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/crazyprograms/sud/corebase"
@@ -24,11 +23,12 @@ func (pti *PoleTableInfo) FromPoleInfo(pi corebase.IPoleInfo) error {
 	s := strings.Split(pi.GetPoleName(), ".")
 	s2 := strings.Split(pi.GetRecordType(), ".")
 	if len(s) < len(s2) {
-		return errors.New("PTI:pole name error")
+		pi.GetPoleName()
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "PTI:Pole", Name: pi.GetPoleName(), Info: "PTI:pole name error"}
 	}
 	for i := 0; i < len(s2); i++ {
 		if s[i] != s2[i] {
-			return errors.New("PTI:pole name error")
+			return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "PTI:Pole", Name: pi.GetPoleName(), Info: "PTI:pole name error"}
 		}
 	}
 	pti.PoleName = s[len(s)-1]

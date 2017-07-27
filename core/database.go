@@ -2,7 +2,8 @@ package core
 
 import (
 	"database/sql"
-	"errors"
+
+	"github.com/crazyprograms/sud/corebase"
 )
 
 func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
@@ -27,7 +28,7 @@ func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
 		Q2 = `ALTER TABLE "` + info.TableName + `" ADD CONSTRAINT "` + info.TableName + `_fk_` + info.PoleName + `" FOREIGN KEY (t) REFERENCES public."Record" ("__RecordUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;`
 		break
 	default:
-		return errors.New("pole type error")
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Name: info.PoleInfo.GetPoleName(), Info: "pole type error " + info.PoleInfo.GetPoleType()}
 	}
 	if _, err = tx.Exec(`ALTER TABLE "` + info.TableName + `" ADD "` + info.PoleName + `" ` + PoleDBType); err != nil {
 		return err
@@ -50,7 +51,7 @@ func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
 	return nil
 
 }
-func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName string) error {
+func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName string, Access corebase.IAccess) error {
 	var err error
 	var ok bool
 	var tx *transaction
@@ -58,7 +59,7 @@ func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName st
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
-	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
 		return err
 	}
 	TablePoles := map[string]map[string]*PoleTableInfo{}
@@ -129,19 +130,33 @@ func (core *Core) CreateDatabase() error {
 	}
 	defer core.RollbackTransaction(tid)
 	tx, _ := core.getTransaction(tid)
-
-	//dbname := con.getDBName()
-	if _, err = tx.Exec(`
-CREATE TABLE "Record"
-(
-  "__RecordUID" uuid NOT NULL,
-  "RecordType" text,
-  "Readonly" boolean NOT NULL,
-  "DeleteRecord" boolean NOT NULL,
-  CONSTRAINT "pk_record" PRIMARY KEY ("__RecordUID")
-)	
-	`); err != nil {
-		return err
+	Querys := []string{
+		`CREATE TABLE "Record"
+		(
+			"__RecordUID" uuid NOT NULL,
+			"RecordAccess" text,
+			"RecordType" text,
+			CONSTRAINT "pk_record" PRIMARY KEY ("__RecordUID")
+		)`,
+		`CREATE TABLE "User"
+		(  
+			"Login" text NOT NULL,
+			"PasswordHash" text,  
+			CONSTRAINT "pk_user" PRIMARY KEY ("Login")
+		)`,
+		`CREATE TABLE "Access"
+		(
+			"Login" text NOT NULL,
+			"Access" text,
+			CONSTRAINT "pk_access" PRIMARY KEY ("Login", "Access")
+		)`,
+		`INSERT INTO "User"("Login") VALUES ('System')`,
+		`INSERT INTO "Access"("Login","Access") VALUES ('System','Default'),('System','')`,
+	}
+	for _, q := range Querys {
+		if _, err = tx.Exec(q); err != nil {
+			return err
+		}
 	}
 	core.CommitTransaction(tid)
 	return nil

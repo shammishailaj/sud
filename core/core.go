@@ -3,12 +3,11 @@ package core
 import (
 	"container/list"
 	"database/sql"
-	"errors"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/callpull"
 	"github.com/crazyprograms/sud/corebase"
 	uuid "github.com/satori/go.uuid"
 )
@@ -22,15 +21,23 @@ type Core struct {
 	baseConfiguration     map[string]*Configuration
 	lockFullConfiguration *sync.Mutex
 	fullConfiguration     map[string]*Configuration
-	lockUsers             *sync.Mutex
-	users                 map[string]IUser
+	lockUsers             *sync.RWMutex
+	users                 map[string]corebase.IUser
 	close                 bool
 	genUID                chan string
 	listenpulls           map[string]IListenPull
 	callpulls             map[string]ICallPull
 }
 
-func (core *Core) addBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
+func (core *Core) GetConfiguration() map[string]*Configuration {
+	l := make(map[string]*Configuration, len(core.baseConfiguration))
+	for key, value := range core.baseConfiguration {
+		l[key] = value
+	}
+	return l
+}
+
+func (core *Core) AddBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
 	core.lockBaseConfiguration.Lock()
 	defer core.lockBaseConfiguration.Unlock()
 	_, ok := core.baseConfiguration[ConfigurationName]
@@ -51,8 +58,10 @@ func (core *Core) addFullConfiguration(ConfigurationName string, conf *Configura
 	return true
 }
 
-func (core *Core) getUser(UserName string) IUser {
-	user, ok := core.users[UserName]
+func (core *Core) getUser(Login string) corebase.IUser {
+	core.lockUsers.RLock()
+	defer core.lockUsers.RUnlock()
+	user, ok := core.users[Login]
 	if ok {
 		return user
 	}
@@ -75,13 +84,16 @@ func (core *Core) getConfiguration(ConfigurationName string) *Configuration {
 	}
 	return nil
 }
-func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, error) {
+func (core *Core) LoadConfiguration(ConfigurationName string, Access corebase.IAccess) (*Configuration, error) {
 	var conf *Configuration
 	if conf = core.getConfiguration(ConfigurationName); conf != nil {
+		if !conf.CheckAccess(Access) {
+			return nil, &corebase.Error{ErrorType: corebase.ErrorTypeAccessIsDenied, Action: "LoadConfiguration", Name: ConfigurationName}
+		}
 		return conf, nil
 	}
-	conf = NewConfiguration()
-	loadConfiguration := make(map[string]*Configuration)
+	AccessConfiguration := map[string]bool{}
+	loadConfiguration := map[string]*Configuration{}
 	depend := &list.List{}
 	var addDepend func(ConfigurationName string) error
 	addDepend = func(ConfigurationName string) error {
@@ -90,7 +102,10 @@ func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, e
 		if lconf, ok = loadConfiguration[ConfigurationName]; !ok {
 			lconf = core.loadBaseConfiguration(ConfigurationName)
 			if lconf == nil {
-				return errors.New("configuration not found: " + ConfigurationName)
+				return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "LoadConfiguration", Name: ConfigurationName}
+			}
+			for _, a := range lconf.GetAccessList() {
+				AccessConfiguration[a] = true
 			}
 			loadConfiguration[ConfigurationName] = lconf
 			for i := 0; i < len(lconf.dependConfigurationName); i++ {
@@ -106,8 +121,15 @@ func (core *Core) LoadConfiguration(ConfigurationName string) (*Configuration, e
 		return nil, err
 	}
 	if depend.Front() == nil {
-		return nil, errors.New("Configuration not found: " + ConfigurationName)
+		return nil, &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "LoadConfiguration", Name: ConfigurationName}
 	}
+	AccessList := make([]string, len(AccessConfiguration), len(AccessConfiguration))
+	ANum := 0
+	for a, _ := range AccessConfiguration {
+		AccessList[ANum] = a
+		ANum++
+	}
+	conf = NewConfiguration(AccessList)
 	for e := depend.Front(); e != nil; e = e.Next() {
 		c := e.Value.(*Configuration)
 		for RecordType, typeInfo := range c.typesInfo {
@@ -143,12 +165,12 @@ func NewCore(DatabaseName string, ConnectionString string) (*Core, error) {
 		baseConfiguration:     make(map[string]*Configuration),
 		lockFullConfiguration: &sync.Mutex{},
 		fullConfiguration:     make(map[string]*Configuration),
-		lockUsers:             &sync.Mutex{},
-		users:                 make(map[string]IUser),
+		lockUsers:             &sync.RWMutex{},
 		close:                 false,
 		listenpulls:           map[string]IListenPull{},
 		callpulls:             map[string]ICallPull{},
 	}
+
 	async := callpull.NewCallPull()
 	core.listenpulls["async"] = async
 	core.callpulls["async"] = async
@@ -163,10 +185,26 @@ func NewCore(DatabaseName string, ConnectionString string) (*Core, error) {
 		log.Fatalln(err)
 		return nil, err
 	}
+
 	go core.gogenUID()
-	core.loadDefaultsConfiguration()
-	core.users["Test"] = &User{UserName: "Test", HashPassword: GenHashPassword("Test"), Access: map[string]bool{"CheckConfiguration": true}}
+	core.CreateDatabase()
+	InitBaseConfiguration(core)
+	InitStdModule(core)
+	if err = core.LoadUsers(); err != nil {
+		return nil, err
+	}
+	core.users["Test"] = &User{Login: "Test", HashPassword: GenHashPassword("Test"), Access: map[string]bool{"CheckConfiguration": true, "Storage": true, "Configuration": true}}
+	core.users["Storage"] = &User{Login: "Storage", HashPassword: GenHashPassword("Test"), Access: map[string]bool{"StorageEngine": true, "Storage": true}}
 	return core, nil
+}
+func (core *Core) LoadUsers() error {
+	var err error
+	core.lockUsers.Lock()
+	defer core.lockUsers.Unlock()
+	if core.users, err = getUsers(core.database); err != nil {
+		return err
+	}
+	return nil
 }
 func (core *Core) gogenUID() {
 	for !core.close {
@@ -180,7 +218,7 @@ func (core *Core) getTransaction(TransactionUID string) (*transaction, error) {
 	if ok {
 		return tx, nil
 	}
-	return nil, errors.New("transaction not found: " + TransactionUID)
+	return nil, &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "GetTransaction", Name: TransactionUID}
 }
 func (core *Core) BeginTransaction() (string, error) {
 	uid := <-core.genUID
@@ -200,7 +238,7 @@ func (core *Core) RollbackTransaction(TransactionUID string) error {
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return errors.New("rollback transaction not found")
+		return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "RollbackTransaction", Name: TransactionUID}
 	}
 	err := t.tx.Rollback()
 	if err != nil {
@@ -215,7 +253,7 @@ func (core *Core) CommitTransaction(TransactionUID string) error {
 	if ok {
 		defer delete(core.trancactions, TransactionUID)
 	} else {
-		return errors.New("transaction not found")
+		return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "CommitTransaction", Name: TransactionUID}
 	}
 	err := t.tx.Commit()
 	if err != nil {
@@ -223,63 +261,85 @@ func (core *Core) CommitTransaction(TransactionUID string) error {
 	}
 	return err
 }
-func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration) (Param map[string]interface{}, Result chan callpull.Result, errResult error) {
+func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time.Duration, Access corebase.IAccess) (Param map[string]interface{}, AccessClient corebase.IAccess, Result chan callpull.Result, errResult error) {
 	var err error
 	var ok bool
 	var config *Configuration
 	var callinfo corebase.ICallInfo
-	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
-		return nil, nil, err
+	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
+		return nil, nil, nil, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+	if !Access.CheckAccess(callinfo.GetAccessListen()) {
+		return nil, nil, nil, &corebase.Error{ErrorType: corebase.ErrorTypeAccessIsDenied, Action: "Listen:Call", Name: Name}
 	}
 	pullName := callinfo.GetPullName()
 	var listenpull IListenPull
 	if listenpull, ok = core.listenpulls[pullName]; !ok {
-		return nil, nil, errors.New("listen pull not found: " + pullName)
+		return nil, nil, nil, &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "Listen:Pull", Name: pullName}
 	}
 	return listenpull.Listen(Name, TimeoutWait)
 }
-func (core *Core) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration) (callpull.Result, error) {
+func (core *Core) Call(ConfigurationName string, Name string, Params map[string]interface{}, TimeoutWait time.Duration, Access corebase.IAccess) (callpull.Result, error) {
 	var err error
 	var ok bool
 	var config *Configuration
 	var callinfo corebase.ICallInfo
-	if config, err = core.LoadConfiguration(ConfigurationName); err != nil {
+	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
+	if !Access.CheckAccess(callinfo.GetAccessCall()) {
+		return callpull.Result{Result: nil}, &corebase.Error{ErrorType: corebase.ErrorTypeAccessIsDenied, Action: "Call", Name: Name}
+	}
 	pullName := callinfo.GetPullName()
 	var cp ICallPull
 	if cp, ok = core.callpulls[pullName]; !ok {
-		return callpull.Result{Result: nil}, errors.New("call pull not found: " + pullName)
+		return callpull.Result{Result: nil}, &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "Call:Pull", Name: pullName}
 	}
-	return cp.Call(Name, Params, TimeoutWait)
+	return cp.Call(Name, Params, TimeoutWait, Access)
 }
-func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere) (map[corebase.UUID]map[string]interface{}, error) {
+func (core *Core) GetRecordsPoles(TransactionUID string, ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere, Access corebase.IAccess) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return nil, err
 	}
-	return tx.GetRecordsPoles(ConfigurationName, RecordType, poles, wheres)
+	return tx.GetRecordsPoles(ConfigurationName, RecordType, poles, wheres, Access)
 }
-func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string, RecordUID corebase.UUID, poles map[string]interface{}) error {
+func (core *Core) SetRecordPoles(TransactionUID string, ConfigurationName string, RecordUID corebase.UUID, poles map[string]interface{}, Access corebase.IAccess) error {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
-	return tx.SetRecordPoles(ConfigurationName, RecordUID, poles)
+	return tx.SetRecordPoles(ConfigurationName, RecordUID, poles, Access)
 }
-func (core *Core) NewRecord(TransactionUID string, ConfigurationName string, RecordType string, Poles map[string]interface{}) (corebase.UUID, error) {
+func (core *Core) NewRecord(TransactionUID string, ConfigurationName string, RecordType string, Poles map[string]interface{}, Access corebase.IAccess) (corebase.UUID, error) {
 	var err error
 	var tx *transaction
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return corebase.NullUUID, err
 	}
-	return tx.NewRecord(ConfigurationName, RecordType, Poles)
+	return tx.NewRecord(ConfigurationName, RecordType, Poles, Access)
+}
+func (core *Core) GetRecordAccess(TransactionUID string, ConfigurationName string, RecordUID corebase.UUID, Access corebase.IAccess) (string, error) {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return "", err
+	}
+	return tx.GetRecordAccess(ConfigurationName, RecordUID, Access)
+}
+func (core *Core) SetRecordAccess(TransactionUID string, ConfigurationName string, RecordUID corebase.UUID, NewAccess string, Access corebase.IAccess) error {
+	var err error
+	var tx *transaction
+	if tx, err = core.getTransaction(TransactionUID); err != nil {
+		return err
+	}
+	return tx.SetRecordAccess(ConfigurationName, RecordUID, NewAccess, Access)
 }

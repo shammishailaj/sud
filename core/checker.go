@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,11 +22,11 @@ func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value interface{}) error {
 	var ok bool
 	var ValueString string
 	if ValueString, ok = Value.(string); !ok {
-		return errors.New("Value type not string")
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerStringValue", Info: "Value type not string"}
 	}
 	if len(pcsv.List) > 0 {
 		if _, ok := pcsv.List[ValueString]; !ok {
-			return errors.New("Value " + ValueString + "  note contain list " + fmt.Sprintln(pcsv.List))
+			return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerStringValue", Info: "Value " + ValueString + "  note contain list " + fmt.Sprintln(pcsv.List)}
 		}
 	}
 	return nil
@@ -60,18 +59,18 @@ func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value interface{}) error {
 	var ok bool
 	var v int64
 	if v, ok = Value.(int64); !ok {
-		return errors.New("Value type not int64")
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerInt64Value", Info: "Value type not int64"}
 	}
 	if len(pciv.List) > 0 {
 		if _, ok := pciv.List[v]; !ok {
-			return errors.New(fmt.Sprintln("Value ", v, "  note contain list ", pciv.List))
+			return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerInt64Value", Info: fmt.Sprintln("Value ", v, "  note contain list ", pciv.List)}
 		}
 	}
 	if pciv.Min && v < pciv.MinValue {
-		return errors.New(fmt.Sprintln("min", v, "<", pciv.MinValue))
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerInt64Value", Info: fmt.Sprintln("min", v, "<", pciv.MinValue)}
 	}
 	if pciv.Max && v > pciv.MaxValue {
-		return errors.New(fmt.Sprintln("max", v, "<", pciv.MaxValue))
+		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Action: "CheckPoleValue", Name: "PoleCheckerInt64Value", Info: fmt.Sprintln("max", v, ">", pciv.MaxValue)}
 	}
 	return nil
 }

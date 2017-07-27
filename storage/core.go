@@ -5,13 +5,13 @@ import (
 
 	"errors"
 
-	"github.com/crazyprograms/callpull"
+	"github.com/crazyprograms/sud/callpull"
 	"github.com/crazyprograms/sud/core"
 	"github.com/crazyprograms/sud/corebase"
 	"github.com/crazyprograms/sud/sortex"
 )
 
-func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
+func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration, Access corebase.IAccess) (callpull.Result, error) {
 	var ok bool
 	var err error
 	var HashI interface{}
@@ -37,7 +37,7 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 		}
 	}
 	var docs map[corebase.UUID]map[string]interface{}
-	if docs, err = cr.GetRecordsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}); err != nil {
+	if docs, err = cr.GetRecordsPoles(TransactionUID, "Storage", "Storage.Stream", []string{"Storage.Stream.*"}, []corebase.IRecordWhere{&corebase.RecordWhereCompare{PoleName: "Storage.Stream.Hash", Operation: "Equally", Value: Hash}}, Access); err != nil {
 		return callpull.Result{Result: nil, Error: err}, nil
 	}
 	if len(docs) == 0 {
@@ -62,14 +62,14 @@ func stdGetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 	sortex.SortStrings(Storages, func(i, j int) bool { return Prioritets[Storages[i]] < Prioritets[Storages[j]] })
 	var r callpull.Result
 	for i := 0; i < len(Storages); i++ {
-		r, err = cr.Call("Storage."+Storages[i], "Storage."+Storages[i]+".GetStream", Param, timeOutWait)
+		r, err = cr.Call("Storage."+Storages[i], "Storage."+Storages[i]+".GetStream", Param, timeOutWait, Access)
 		if err == nil {
 			return r, nil
 		}
 	}
 	return r, err
 }
-func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {
+func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration, Access corebase.IAccess) (callpull.Result, error) {
 	var ok bool
 	var StorageI interface{}
 	var Storage string
@@ -79,30 +79,37 @@ func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 	if Storage, ok = StorageI.(string); !ok {
 		return callpull.Result{Result: nil, Error: errors.New("parameter Storage is not string")}, nil
 	}
-	return cr.Call("Storage."+Storage, "Storage."+Storage+".SetStream", Param, timeOutWait)
+	return cr.Call("Storage."+Storage, "Storage."+Storage+".SetStream", Param, timeOutWait, Access)
 }
-func init() {
-	initConfiguration()
-	initDefaultStorageConfiguration()
-	core.AddStdCall("Storage.GetStream", stdGetStream)
-	core.AddStdCall("Storage.SetStream", stdSetStream)
-}
-func initConfiguration() {
-	conf := core.NewConfiguration()
-	conf.AddCall("Storage", "Storage.GetStream", "std", true, false, "")
-	conf.AddCall("Storage", "Storage.SetStream", "std", true, false, "")
 
-	conf.AddType("Storage", "Storage.Stream", true, true, true, "Поток")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Hash", "StringValue", corebase.NULL, "Unique", &core.PoleCheckerStringValue{}, true, true, "Хеш потока")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Size", "Int64Value", corebase.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Размер в байтах")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Priority", "Int64Value", corebase.NULL, "None", &core.PoleCheckerInt64Value{}, true, true, "Приоритет")
-	conf.AddPole("Storage", "Storage.Stream", "Storage.Stream.Storage", "StringValue", corebase.NULL, "None", &core.PoleCheckerStringValue{}, true, true, "Имя хранилища в котором хранится")
-	core.InitAddBaseConfiguration("Storage", conf)
+func initConfiguration(c *core.Core) bool {
+	conf := core.NewConfiguration([]string{"Storage"})
+	conf.AddCall(core.CallInfo{ConfigurationName: "Storage", Name: "Storage.GetStream", PullName: "std", AccessCall: "Storage", AccessListen: "", Title: "Получить поток"})
+	conf.AddCall(core.CallInfo{ConfigurationName: "Storage", Name: "Storage.SetStream", PullName: "std", AccessCall: "Storage", AccessListen: "", Title: "Передать поток"})
+
+	conf.AddType(core.TypeInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", AccessNew: "StorageEngine", AccessRead: "Storage", AccessSave: "StorageEngine", Title: "Поток"})
+	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Hash", PoleType: "StringValue", Default: corebase.NULL, IndexType: "Index", Checker: &core.PoleCheckerStringValue{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Хеш потока"})
+	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Size", PoleType: "Int64Value", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerInt64Value{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Размер в байтах"})
+	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Priority", PoleType: "Int64Value", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerInt64Value{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Приоритет"})
+	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Storage", PoleType: "StringValue", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerStringValue{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Имя хранилища в котором хранится"})
+	return c.AddBaseConfiguration("Storage", conf)
 }
-func initDefaultStorageConfiguration() {
-	conf := core.NewConfiguration()
-	conf.AddCall("Storage.Default", "Storage.Default.GetStream", "async", true, true, "")
-	conf.AddCall("Storage.Default", "Storage.Default.SetStream", "async", true, true, "")
+func initDefaultStorageConfiguration(c *core.Core) bool {
+	conf := core.NewConfiguration([]string{"StorageEngine"})
+	conf.AddCall(core.CallInfo{ConfigurationName: "Storage.Default", Name: "Storage.Default.GetStream", PullName: "async", AccessCall: "Storage", AccessListen: "StorageEngine", Title: ""})
+	conf.AddCall(core.CallInfo{ConfigurationName: "Storage.Default", Name: "Storage.Default.SetStream", PullName: "async", AccessCall: "Storage", AccessListen: "StorageEngine", Title: ""})
 	conf.AddDependConfiguration("Storage")
-	core.InitAddBaseConfiguration("Storage.Default", conf)
+	return c.AddBaseConfiguration("Storage.Default", conf)
+}
+func InitModule(c *core.Core) error {
+	var err error
+	initConfiguration(c)
+	initDefaultStorageConfiguration(c)
+	if err = core.AddStdCall("Storage.GetStream", stdGetStream); err != nil {
+		return err
+	}
+	if err = core.AddStdCall("Storage.SetStream", stdSetStream); err != nil {
+		return err
+	}
+	return nil
 }
