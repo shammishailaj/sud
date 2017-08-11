@@ -9,19 +9,22 @@ import (
 
 func stdConfigurationList(cr *Core, Name string, Param map[string]interface{}, timeOutWait time.Duration, Access corebase.IAccess) (callpull.Result, error) {
 	configurations := cr.GetConfiguration()
-	list := make([]interface{}, len(configurations))
-	i := 0
+	listConf := make(map[string]interface{})
 	for name := range configurations {
-		list[i] = name
-		i++
+		var err error
+		var confInfo map[string]interface{}
+		if confInfo, err = configurations[name].Save(); err != nil {
+			return callpull.Result{Error: err, Result: nil}, nil
+		}
+		listConf[name] = confInfo
 	}
-	return callpull.Result{Error: nil, Result: list}, nil
+	return callpull.Result{Error: nil, Result: listConf}, nil
 }
 
 func InitStdModule(c *Core) bool {
 	conf := NewConfiguration([]string{"std"})
-	conf.AddCall(CallInfo{ConfigurationName: "std", Name: "std.Configuration.List", PullName: "std", AccessCall: "Configuration", AccessListen: "", Title: "Список конфигураций"})
-	if AddStdCall("std.Configuration.List", stdConfigurationList) != nil {
+	conf.AddCall(CallInfo{ConfigurationName: "std", Name: "std.Configuration.Get", PullName: "std", AccessCall: "Configuration", AccessListen: "", Title: "Список конфигураций"})
+	if AddStdCall("std.Configuration.Get", stdConfigurationList) != nil {
 		return false
 	}
 	return c.AddBaseConfiguration("std", conf)

@@ -144,7 +144,7 @@ type RecordWhereCompare struct {
 	Operation     string
 	ExtensionName string
 	//dCallFunction Extension = null;
-	Value Object
+	Value interface{}
 }
 
 func (dw *RecordWhereCompare) Save() (string, map[string]interface{}, error) {

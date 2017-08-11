@@ -28,7 +28,7 @@ type IPoleInfo interface {
 	GetTitle() string
 	GetAccessRead() string
 	GetAccessWrite() string
-	GetDefault() Object
+	GetDefault() interface{}
 	GetIndexType() string
 	GetChecker() IPoleChecker
 }

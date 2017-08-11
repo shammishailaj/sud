@@ -129,6 +129,7 @@ type jsonParam struct {
 	Int    *int64                 `json:"int,omitempty"`
 	Time   *time.Time             `json:"time,omitempty"`
 	Bytes  *string                `json:"bytes,omitempty"`
+	NULL   *string                `json:"null,omitempty"`
 	Map    *map[string]*jsonParam `json:"map,omitempty"`
 	List   *[]*jsonParam          `json:"list,omitempty"`
 }
@@ -200,6 +201,9 @@ func jsonPack(Param interface{}) (*jsonParam, error) {
 			return nil, err
 		}
 		return &jsonParam{List: &m}, nil
+	case corebase.TNULL:
+		n := "NULL"
+		return &jsonParam{NULL: &n}, nil
 	default:
 		return nil, errors.New("json pack error " + fmt.Sprintln(v))
 	}
@@ -234,6 +238,9 @@ func jsonUnPack(Param *jsonParam) (interface{}, error) {
 			return nil, err
 		}
 		return m, nil
+	}
+	if Param.NULL != nil {
+		return corebase.NULL, nil
 	}
 	return nil, errors.New("json unpack error")
 }

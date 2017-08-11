@@ -33,3 +33,24 @@ func AddStdCall(Name string, Call FCall) error {
 	return nil
 
 }
+
+/*func ListStringToInterfaceList(list []string) []interface{} {
+	ilist := make([]interface{}, len(list))
+	for i, item := range list {
+		ilist[i] = item
+	}
+	return ilist
+}
+func InterfaceListToListString(list []interface{}) ([]string, error) {
+	slist := make([]string, len(list))
+	for i, item := range list {
+		switch v := item.(type) {
+		case string:
+			slist[i] = v
+		default:
+			return nil, &corebase.Error{ErrorType: corebase.ErrorTypeConvert, Action: "InterfaceListToListString"}
+		}
+
+	}
+	return slist, nil
+}*/

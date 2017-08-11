@@ -56,7 +56,7 @@ func (state *queryState) AddParam(value interface{}) string {
 	state.params = append(state.params, value)
 	return "$" + strconv.Itoa(len(state.params))
 }
-func (state *queryState) AddParamObject(value corebase.Object) (string, error) {
+func (state *queryState) AddParamObject(value interface{}) (string, error) {
 	if corebase.IsNull(value) {
 		return state.AddParam(nil), nil
 	}
@@ -186,7 +186,7 @@ func (state *queryState) GetPoleValueArray() [](interface{}) {
 }
 func (state *queryState) SetRecordPoles(doc map[string]interface{}, values [](interface{})) error {
 	for poleName, pti := range state.poles {
-		var o corebase.Object
+		var o interface{}
 		switch pti.PoleInfo.GetPoleType() {
 		case "BooleanValue":
 			v, ok := values[pti.N].(*sql.NullBool)
