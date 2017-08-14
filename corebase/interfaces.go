@@ -2,7 +2,8 @@ package corebase
 
 type IPoleChecker interface {
 	CheckPoleValue(Value interface{}) error
-	Load(poles map[string]interface{})
+	Load(poles map[string]interface{}) error
+	Save() map[string]interface{}
 }
 
 type IRecordWhere interface {

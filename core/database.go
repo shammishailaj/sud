@@ -11,22 +11,19 @@ func (core *Core) addColumn(tx *transaction, info *PoleTableInfo) error {
 	PoleDBType := ""
 	var Q2 string = ""
 	switch info.PoleInfo.GetPoleType() {
+	case "BooleanValue":
+		PoleDBType = "boolean NULL"
 	case "StringValue":
 		PoleDBType = `text NULL`
-		break
 	case "Int64Value":
 		PoleDBType = `bigint NULL`
-		break
 	case "DateValue":
 		PoleDBType = `date NULL`
-		break
 	case "DateTimeValue":
 		PoleDBType = `timestamp NULL`
-		break
 	case "RecordLinkValue":
 		PoleDBType = `uuid NULL`
 		Q2 = `ALTER TABLE "` + info.TableName + `" ADD CONSTRAINT "` + info.TableName + `_fk_` + info.PoleName + `" FOREIGN KEY (t) REFERENCES public."Record" ("__RecordUID") MATCH SIMPLE ON UPDATE NO ACTION ON DELETE NO ACTION;`
-		break
 	default:
 		return &corebase.Error{ErrorType: corebase.ErrorTypeInfo, Name: info.PoleInfo.GetPoleName(), Info: "pole type error " + info.PoleInfo.GetPoleType()}
 	}

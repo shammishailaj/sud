@@ -14,6 +14,7 @@ import (
 )
 
 type JParam struct {
+	Bool   *bool               `json:"bool,omitempty"`
 	String *string             `json:"string,omitempty"`
 	Int    *int64              `json:"int,omitempty"`
 	Time   *time.Time          `json:"time,omitempty"`
@@ -66,6 +67,8 @@ func UnPackList(Params []*JParam) ([]interface{}, error) {
 func Pack(Param interface{}) (*JParam, error) {
 	var err error
 	switch v := Param.(type) {
+	case bool:
+		return &JParam{Bool: &v}, nil
 	case string:
 		return &JParam{String: &v}, nil
 	case int64:

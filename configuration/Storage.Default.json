@@ -1,0 +1,32 @@
+{
+    "map": {
+        "accessList": { "list": [{ "string": "StorageEngine" }] },
+        "callInfo": {
+            "map": {
+                "Storage.Default.GetStream": {
+                    "map": {
+                        "accessCall": { "string": "Storage" },
+                        "accessListen": { "string": "StorageEngine" },
+                        "configurationName": { "string": "Storage.Default" },
+                        "name": { "string": "Storage.Default.GetStream" },
+                        "pullName": { "string": "async" },
+                        "title": { "string": "" }
+                    }
+                },
+                "Storage.Default.SetStream": {
+                    "map": {
+                        "accessCall": { "string": "Storage" },
+                        "accessListen": { "string": "StorageEngine" },
+                        "configurationName": { "string": "Storage.Default" },
+                        "name": { "string": "Storage.Default.SetStream" },
+                        "pullName": { "string": "async" },
+                        "title": { "string": "" }
+                    }
+                }
+            }
+        },
+        "dependConfigurationName": { "list": [{ "string": "Storage" }] },
+        "polesInfo": { "map": {} },
+        "typeInfo": { "map": {} }
+    }
+}

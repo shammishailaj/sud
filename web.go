@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"time"
 
 	"fmt"
@@ -66,6 +67,11 @@ func StartServer(end chan error) {
 	}
 	storage.InitModule(c)
 	checkTest(c)
+	for name, c := range c.GetConfiguration() {
+		if data, err := c.SaveJson(); err == nil {
+			ioutil.WriteFile("./configuration/"+name+".json", data, 0777)
+		}
+	}
 	server := httpserver.NewServer(c, ":8080")
 	end <- server.Start()
 }

@@ -2,8 +2,9 @@ package core
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"reflect"
+
+	"github.com/crazyprograms/sud/structures"
 
 	"github.com/crazyprograms/sud/corebase"
 )
@@ -31,19 +32,34 @@ func (pcsv *PoleCheckerStringValue) CheckPoleValue(Value interface{}) error {
 	}
 	return nil
 }
-func (pcsv *PoleCheckerStringValue) Load(Poles map[string]interface{}) {
-	if CheckerStringValueAllowNull, ok := Poles["Configuration.PoleInfo.CheckerStringValueAllowNull"]; ok && !corebase.IsNull(CheckerStringValueAllowNull) {
-		if v, ok := CheckerStringValueAllowNull.(string); ok {
-			pcsv.AllowNull = (v == "True")
+func (pcsv *PoleCheckerStringValue) Load(Poles map[string]interface{}) error {
+	pcsv.AllowNull = false
+	pcsv.List = map[string]bool{}
+	if AllowNull, ok := Poles["allowNull"]; ok {
+		if v, ok := AllowNull.(bool); ok {
+			pcsv.AllowNull = v
 		}
 	}
-	if CheckerStringValueList, ok := Poles["Configuration.PoleInfo.CheckerStringValueList"]; ok && !corebase.IsNull(CheckerStringValueList) {
-		if v, ok := CheckerStringValueList.(string); ok {
-			for _, s := range strings.Split(v, ",") {
-				pcsv.List[s] = true
-			}
+	if list, ok := structures.MapGetStringList(Poles, "list"); ok {
+		for _, item := range list {
+			pcsv.List[item] = true
 		}
 	}
+	return nil
+}
+func (pcsv *PoleCheckerStringValue) Save() map[string]interface{} {
+	r := map[string]interface{}{}
+	r["allowNull"] = pcsv.AllowNull
+	if pcsv.List != nil {
+		list := make([]string, len(pcsv.List))
+		i := 0
+		for v := range pcsv.List {
+			list[i] = v
+			i++
+		}
+		structures.MapSetStringList(r, "list", list)
+	}
+	return r
 }
 
 type PoleCheckerInt64Value struct {
@@ -74,27 +90,77 @@ func (pciv *PoleCheckerInt64Value) CheckPoleValue(Value interface{}) error {
 	}
 	return nil
 }
-func (pciv *PoleCheckerInt64Value) Load(Poles map[string]interface{}) {
-
-	if CheckerInt64ValueMin, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueMin"]; ok1 {
-		if v, ok := CheckerInt64ValueMin.(int64); ok {
+func (pciv *PoleCheckerInt64Value) Load(Poles map[string]interface{}) error {
+	pciv.AllowNull = false
+	pciv.List = map[int64]bool{}
+	if AllowNull, ok := Poles["allowNull"]; ok {
+		if v, ok := AllowNull.(bool); ok {
+			pciv.AllowNull = v
+		}
+	}
+	if v, ok := Poles["min"]; ok {
+		if min, ok := v.(int64); ok {
 			pciv.Min = true
-			pciv.MinValue = v
+			pciv.MinValue = min
 		}
 	}
-	if CheckerInt64ValueMax, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueMax"]; ok1 {
-		if v, ok := CheckerInt64ValueMax.(int64); ok {
+	if v, ok := Poles["max"]; ok {
+		if max, ok := v.(int64); ok {
 			pciv.Max = true
-			pciv.MaxValue = v
+			pciv.MaxValue = max
 		}
 	}
-	if CheckerInt64ValueList, ok1 := Poles["Configuration.PoleInfo.CheckerInt64ValueList"]; ok1 {
-		if list, ok := CheckerInt64ValueList.(string); ok {
-			for _, s := range strings.Split(list, ",") {
-				if v, err := strconv.ParseInt(s, 10, 64); err == nil {
-					pciv.List[v] = true
-				}
-			}
+	if list, ok := structures.MapGetInt64List(Poles, "list"); ok {
+		for _, item := range list {
+			pciv.List[item] = true
 		}
 	}
+	return nil
+}
+func (pciv *PoleCheckerInt64Value) Save() map[string]interface{} {
+	r := map[string]interface{}{}
+	r["allowNull"] = pciv.AllowNull
+	if pciv.Min {
+		r["min"] = pciv.MinValue
+	}
+	if pciv.Max {
+		r["max"] = pciv.MaxValue
+	}
+	if pciv.List != nil {
+		list := make([]int64, len(pciv.List))
+		i := 0
+		for v := range pciv.List {
+			list[i] = v
+			i++
+		}
+		structures.MapSetInt64List(r, "list", list)
+	}
+	return r
+}
+func LoadChecker(data map[string]interface{}) (corebase.IPoleChecker, error) {
+	var checker corebase.IPoleChecker
+	var v interface{}
+	var vc map[string]interface{}
+	var ok bool
+	if v, ok = data["PoleCheckerStringValue"]; ok {
+		checker = &PoleCheckerStringValue{}
+	} else if v, ok = data["PoleCheckerInt64Value"]; ok {
+		checker = &PoleCheckerInt64Value{}
+	}
+	if vc, ok = v.(map[string]interface{}); !ok {
+		return nil, &corebase.Error{ErrorType: corebase.ErrorFormat, Action: "LoadChecker", Info: "structure error"}
+	}
+	if err := checker.Load(vc); err != nil {
+		return nil, err
+	}
+	return checker, nil
+}
+func SaveChecker(checker corebase.IPoleChecker) map[string]interface{} {
+	r := make(map[string]interface{})
+	if checker == nil {
+		return nil
+	}
+	name := reflect.TypeOf(checker).Elem().Name()
+	r[name] = checker.Save()
+	return r
 }

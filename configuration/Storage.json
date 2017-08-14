@@ -1,0 +1,109 @@
+{
+    "map": {
+        "accessList": { "list": [{ "string": "Storage" }] },
+        "callInfo": {
+            "map": {
+                "Storage.GetStream": {
+                    "map": {
+                        "accessCall": { "string": "Storage" },
+                        "accessListen": { "string": "" },
+                        "configurationName": { "string": "Storage" },
+                        "name": { "string": "Storage.GetStream" },
+                        "pullName": { "string": "std" },
+                        "title": { "string": "Получить поток" }
+                    }
+                },
+                "Storage.SetStream": {
+                    "map": {
+                        "accessCall": { "string": "Storage" },
+                        "accessListen": { "string": "" },
+                        "configurationName": { "string": "Storage" },
+                        "name": { "string": "Storage.SetStream" },
+                        "pullName": { "string": "std" },
+                        "title": { "string": "Передать поток" }
+                    }
+                }
+            }
+        },
+        "dependConfigurationName": { "list": [] },
+        "polesInfo": {
+            "map": {
+                "Storage.Stream": {
+                    "map": {
+                        "Storage.Stream.Hash": {
+                            "map": {
+                                "accessRead": { "string": "Storage" },
+                                "accessWrite": { "string": "StorageEngine" },
+                                "checker": { "map": { "PoleCheckerStringValue": { "map": { "allowNull": { "bool": false } } } } },
+                                "configurationName": { "string": "Storage" },
+                                "default": { "null": "NULL" },
+                                "indexType": { "string": "Index" },
+                                "poleName": { "string": "Storage.Stream.Hash" },
+                                "poleType": { "string": "StringValue" },
+                                "recordType": { "string": "Storage.Stream" },
+                                "title": { "string": "Хеш потока" }
+                            }
+                        },
+                        "Storage.Stream.Priority": {
+                            "map": {
+                                "accessRead": { "string": "Storage" },
+                                "accessWrite": { "string": "StorageEngine" },
+                                "checker": { "map": { "PoleCheckerInt64Value": { "map": { "allowNull": { "bool": false } } } } },
+                                "configurationName": { "string": "Storage" },
+                                "default": { "null": "NULL" },
+                                "indexType": { "string": "None" },
+                                "poleName": { "string": "Storage.Stream.Priority" },
+                                "poleType": { "string": "Int64Value" },
+                                "recordType": { "string": "Storage.Stream" },
+                                "title": { "string": "Приоритет" }
+                            }
+                        },
+                        "Storage.Stream.Size": {
+                            "map": {
+                                "accessRead": { "string": "Storage" },
+                                "accessWrite": { "string": "StorageEngine" },
+                                "checker": { "map": { "PoleCheckerInt64Value": { "map": { "allowNull": { "bool": false } } } } },
+                                "configurationName": { "string": "Storage" },
+                                "default": { "null": "NULL" },
+                                "indexType": { "string": "None" },
+                                "poleName": { "string": "Storage.Stream.Size" },
+                                "poleType": { "string": "Int64Value" },
+                                "recordType": { "string": "Storage.Stream" },
+                                "title": { "string": "Размер в байтах" }
+                            }
+                        },
+                        "Storage.Stream.Storage": {
+                            "map": {
+                                "accessRead": { "string": "Storage" },
+                                "accessWrite": { "string": "StorageEngine" },
+                                "checker": { "map": { "PoleCheckerStringValue": { "map": { "allowNull": { "bool": false } } } } },
+                                "configurationName": { "string": "Storage" },
+                                "default": { "null": "NULL" },
+                                "indexType": { "string": "None" },
+                                "poleName": { "string": "Storage.Stream.Storage" },
+                                "poleType": { "string": "StringValue" },
+                                "recordType": { "string": "Storage.Stream" },
+                                "title": { "string": "Имя хранилища в котором хранится" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "typeInfo": {
+            "map": {
+                "Storage.Stream": {
+                    "map": {
+                        "accessNew": { "string": "StorageEngine" },
+                        "accessRead": { "string": "Storage" },
+                        "accessSave": { "string": "StorageEngine" },
+                        "accessType": { "string": "" },
+                        "configurationName": { "string": "Storage" },
+                        "recordType": { "string": "Storage.Stream" },
+                        "title": { "string": "Поток" }
+                    }
+                }
+            }
+        }
+    }
+}

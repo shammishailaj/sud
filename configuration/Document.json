@@ -1,0 +1,44 @@
+{
+    "map": {
+        "accessList": { "list": [{ "string": "Document" }] },
+        "callInfo": { "map": {} },
+        "dependConfigurationName": { "list": [] },
+        "polesInfo": {
+            "map": {
+                "Document": {
+                    "map": {
+                        "Document.DocumentType": {
+                            "map": {
+                                "accessRead": { "string": "DocumentReader" },
+                                "accessWrite": { "string": "DocumentEditor" },
+                                "checker": { "map": { "PoleCheckerStringValue": { "map": { "allowNull": { "bool": false } } } } },
+                                "configurationName": { "string": "Document" },
+                                "default": { "null": "NULL" },
+                                "indexType": { "string": "Index" },
+                                "poleName": { "string": "Document.DocumentType" },
+                                "poleType": { "string": "StringValue" },
+                                "recordType": { "string": "Document" },
+                                "title": { "string": "Тип документа" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "typeInfo": {
+            "map": {
+                "Document": {
+                    "map": {
+                        "accessNew": { "string": "DocumentEditor" },
+                        "accessRead": { "string": "DocumentReader" },
+                        "accessSave": { "string": "DocumentEditor" },
+                        "accessType": { "string": "Check" },
+                        "configurationName": { "string": "Document" },
+                        "recordType": { "string": "Document" },
+                        "title": { "string": "Документ" }
+                    }
+                }
+            }
+        }
+    }
+}
