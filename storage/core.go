@@ -81,30 +81,8 @@ func stdSetStream(cr *core.Core, Name string, Param map[string]interface{}, time
 	}
 	return cr.Call("Storage."+Storage, "Storage."+Storage+".SetStream", Param, timeOutWait, Access)
 }
-
-func initConfiguration(c *core.Core) bool {
-	conf := core.NewConfiguration([]string{"Storage"})
-	conf.AddCall(core.CallInfo{ConfigurationName: "Storage", Name: "Storage.GetStream", PullName: "std", AccessCall: "Storage", AccessListen: "", Title: "Получить поток"})
-	conf.AddCall(core.CallInfo{ConfigurationName: "Storage", Name: "Storage.SetStream", PullName: "std", AccessCall: "Storage", AccessListen: "", Title: "Передать поток"})
-
-	conf.AddType(core.TypeInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", AccessNew: "StorageEngine", AccessRead: "Storage", AccessSave: "StorageEngine", Title: "Поток"})
-	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Hash", PoleType: "StringValue", Default: corebase.NULL, IndexType: "Index", Checker: &core.PoleCheckerStringValue{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Хеш потока"})
-	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Size", PoleType: "Int64Value", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerInt64Value{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Размер в байтах"})
-	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Priority", PoleType: "Int64Value", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerInt64Value{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Приоритет"})
-	conf.AddPole(core.PoleInfo{ConfigurationName: "Storage", RecordType: "Storage.Stream", PoleName: "Storage.Stream.Storage", PoleType: "StringValue", Default: corebase.NULL, IndexType: "None", Checker: &core.PoleCheckerStringValue{}, AccessRead: "Storage", AccessWrite: "StorageEngine", Title: "Имя хранилища в котором хранится"})
-	return c.AddBaseConfiguration("Storage", conf)
-}
-func initDefaultStorageConfiguration(c *core.Core) bool {
-	conf := core.NewConfiguration([]string{"StorageEngine"})
-	conf.AddCall(core.CallInfo{ConfigurationName: "Storage.Default", Name: "Storage.Default.GetStream", PullName: "async", AccessCall: "Storage", AccessListen: "StorageEngine", Title: ""})
-	conf.AddCall(core.CallInfo{ConfigurationName: "Storage.Default", Name: "Storage.Default.SetStream", PullName: "async", AccessCall: "Storage", AccessListen: "StorageEngine", Title: ""})
-	conf.AddDependConfiguration("Storage")
-	return c.AddBaseConfiguration("Storage.Default", conf)
-}
 func InitModule(c *core.Core) error {
 	var err error
-	initConfiguration(c)
-	initDefaultStorageConfiguration(c)
 	if err = core.AddStdCall("Storage.GetStream", stdGetStream); err != nil {
 		return err
 	}

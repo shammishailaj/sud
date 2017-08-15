@@ -22,10 +22,8 @@ func stdConfigurationList(cr *Core, Name string, Param map[string]interface{}, t
 }
 
 func InitStdModule(c *Core) bool {
-	conf := NewConfiguration([]string{"std"})
-	conf.AddCall(CallInfo{ConfigurationName: "std", Name: "std.Configuration.Get", PullName: "std", AccessCall: "Configuration", AccessListen: "", Title: "Список конфигураций"})
 	if AddStdCall("std.Configuration.Get", stdConfigurationList) != nil {
 		return false
 	}
-	return c.AddBaseConfiguration("std", conf)
+	return true
 }

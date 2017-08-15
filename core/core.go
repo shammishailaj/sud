@@ -188,8 +188,6 @@ func NewCore(DatabaseName string, ConnectionString string) (*Core, error) {
 
 	go core.gogenUID()
 	core.CreateDatabase()
-	InitBaseConfiguration(core)
-	InitStdModule(core)
 	if err = core.LoadUsers(); err != nil {
 		return nil, err
 	}

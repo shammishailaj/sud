@@ -310,38 +310,46 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 		}
 	}
 	if item, ok := confInfo["polesInfo"]; ok {
-		if polesInfo, ok := item.(map[string]interface{}); ok {
-			for poleName, info := range polesInfo {
-				if infoExt, ok := info.(map[string]interface{}); ok {
-					var pi PoleInfo
-					var configurationNameOK, poleNameOK, poleTypeOK, recordTypeOK, indexTypeOK, defaultOK, checkerOK, accessReadOK, accessWriteOK, titleOK bool
-					pi.ConfigurationName, configurationNameOK = structures.MapGetString(infoExt, "configurationName")
-					pi.PoleName, poleNameOK = structures.MapGetString(infoExt, "poleName")
-					pi.PoleType, poleTypeOK = structures.MapGetString(infoExt, "poleType")
-					pi.RecordType, recordTypeOK = structures.MapGetString(infoExt, "recordType")
-					pi.IndexType, indexTypeOK = structures.MapGetString(infoExt, "indexType")
-					pi.Default, defaultOK = structures.MapGetValue(infoExt, "default")
-					var Checker interface{}
-					var err error
-					Checker, checkerOK = structures.MapGetValue(infoExt, "checker")
-					if CheckerM, ok := Checker.(map[string]interface{}); ok {
-						if pi.Checker, err = LoadChecker(CheckerM); err != nil {
-							return nil
+		if recordTypes, ok := item.(map[string]interface{}); ok {
+			for recordTypeName, recordTypesInfo := range recordTypes {
+				if polesInfo, ok := recordTypesInfo.(map[string]interface{}); ok {
+					for poleName, info := range polesInfo {
+						if infoExt, ok := info.(map[string]interface{}); ok {
+							var pi PoleInfo
+							var configurationNameOK, poleNameOK, poleTypeOK, recordTypeOK, indexTypeOK, defaultOK, checkerOK, accessReadOK, accessWriteOK, titleOK bool
+							pi.ConfigurationName, configurationNameOK = structures.MapGetString(infoExt, "configurationName")
+							pi.PoleName, poleNameOK = structures.MapGetString(infoExt, "poleName")
+							pi.PoleType, poleTypeOK = structures.MapGetString(infoExt, "poleType")
+							pi.RecordType, recordTypeOK = structures.MapGetString(infoExt, "recordType")
+							pi.IndexType, indexTypeOK = structures.MapGetString(infoExt, "indexType")
+							pi.Default, defaultOK = structures.MapGetValue(infoExt, "default")
+							var Checker interface{}
+							var err error
+							Checker, checkerOK = structures.MapGetValue(infoExt, "checker")
+							if CheckerM, ok := Checker.(map[string]interface{}); ok {
+								if pi.Checker, err = LoadChecker(CheckerM); err != nil {
+									return nil
+								}
+							}
+							pi.AccessRead, accessReadOK = structures.MapGetString(infoExt, "accessRead")
+							pi.AccessWrite, accessWriteOK = structures.MapGetString(infoExt, "accessWrite")
+							pi.Title, titleOK = structures.MapGetString(infoExt, "title")
+
+							if recordTypeName != pi.RecordType {
+								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "recordTypeName", Name: "conf stucture error"}
+							}
+							if poleName != pi.PoleName {
+								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "poleName", Name: "conf stucture error"}
+							}
+							if configurationNameOK && poleNameOK && poleTypeOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
+								conf.AddPole(pi)
+							} else {
+								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, poleName, poleType, recordType, indexType, default, checker, accessRead, accessWrite, title", Name: "conf stucture error"}
+							}
+						} else {
+							return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "callInfo", Name: "conf sutucture error"}
 						}
 					}
-					pi.AccessRead, accessReadOK = structures.MapGetString(infoExt, "accessRead")
-					pi.AccessWrite, accessWriteOK = structures.MapGetString(infoExt, "accessWrite")
-					pi.Title, titleOK = structures.MapGetString(infoExt, "title")
-					if poleName != pi.PoleName {
-						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "poleName", Name: "conf stucture error"}
-					}
-					if configurationNameOK && poleNameOK && poleTypeOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
-						conf.AddPole(pi)
-					} else {
-						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, poleName, poleType, recordType, indexType, default, checker, accessRead, accessWrite, title", Name: "conf stucture error"}
-					}
-				} else {
-					return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "callInfo", Name: "conf sutucture error"}
 				}
 			}
 		}

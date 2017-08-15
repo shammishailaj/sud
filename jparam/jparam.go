@@ -111,6 +111,9 @@ func UnPack(Param *JParam) (interface{}, error) {
 	if Param.Int != nil {
 		return *Param.Int, nil
 	}
+	if Param.Bool != nil {
+		return *Param.Bool, nil
+	}
 	if Param.Time != nil {
 		return *Param.Time, nil
 	}
@@ -146,9 +149,9 @@ func ToJson(Param interface{}) ([]byte, error) {
 }
 func FromJson(str []byte) (interface{}, error) {
 	var err error
-	var OutParam *JParam
-	if err = json.Unmarshal(str, OutParam); err != nil {
+	var OutParam JParam
+	if err = json.Unmarshal(str, &OutParam); err != nil {
 		return nil, err
 	}
-	return UnPack(OutParam)
+	return UnPack(&OutParam)
 }
