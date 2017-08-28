@@ -98,7 +98,7 @@ func (cr *Configurator) GetConfiguration(ConfigurationName string, Access coreba
 			return nil, err
 		}
 	}
-	if !conf.CheckAccess(Access) {
+	if !conf.CheckAccessLoad(Access) {
 		return nil, &corebase.Error{ErrorType: corebase.ErrorTypeAccessIsDenied, Action: "LoadConfiguration", Name: ConfigurationName}
 	}
 	return conf, nil
@@ -118,7 +118,7 @@ func (cr *Configurator) loadConfiguration(ConfigurationName string) (*Configurat
 			if lconf, ok = cr.baseConfiguration[ConfigurationName]; !ok {
 				return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "LoadConfiguration", Name: ConfigurationName}
 			}
-			for _, a := range lconf.GetAccessList() {
+			for _, a := range lconf.GetAccessLoad() {
 				AccessConfiguration[a] = true
 			}
 			loadConfiguration[ConfigurationName] = lconf
@@ -148,6 +148,9 @@ func (cr *Configurator) loadConfiguration(ConfigurationName string) (*Configurat
 		c := e.Value.(*Configuration)
 		for RecordType, typeInfo := range c.typesInfo {
 			conf.typesInfo[RecordType] = typeInfo
+		}
+		for AccessName, accessInfo := range c.accessInfo {
+			conf.accessInfo[AccessName] = accessInfo
 		}
 		for CallName, callInfo := range c.callsInfo {
 			conf.callsInfo[CallName] = callInfo
