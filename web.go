@@ -1,9 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"os"
-	"path"
 	"time"
 
 	"fmt"
@@ -58,35 +55,6 @@ func storageNode() {
 	//client := c.NewClient("Test", "Test", "Storage.Default")
 	storage := storage.StartStorage("Default", client, "D:/SUDStorage")
 	fmt.Println(storage)
-
-}
-func loadConfigurations(c *core.Core, configDir string) error {
-	configDir = path.Clean(configDir)
-
-	var err error
-	var files []os.FileInfo
-	if files, err = ioutil.ReadDir(configDir); err != nil {
-		return err
-	}
-	for _, file := range files {
-		n := file.Name()
-		nf := path.Join(configDir, n)
-		if file.IsDir() {
-			loadConfigurations(c, nf)
-		} else {
-			var data []byte
-			if data, err = ioutil.ReadFile(nf); err != nil {
-				return err
-			}
-			confName := n[0 : len(n)-len(path.Ext(n))]
-			conf := core.NewConfiguration([]string{})
-			if err = conf.LoadJson(data); err != nil {
-				return err
-			}
-			c.AddBaseConfiguration(confName, conf)
-		}
-	}
-	return nil
 }
 func StartServer(end chan error) {
 	var err error
@@ -94,7 +62,8 @@ func StartServer(end chan error) {
 	if c, err = core.NewCore("test", "user=suduser dbname=test password=Pa$$w0rd sslmode=disable"); err != nil {
 		fmt.Println(err)
 	}
-	loadConfigurations(c, "./configuration/")
+	c.Configurator().SetConfigurationPath("./configuration/")
+	c.Configurator().ReloadConfiguration()
 	core.InitStdModule(c)
 	storage.InitModule(c)
 	checkTest(c)

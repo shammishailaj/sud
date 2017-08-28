@@ -1,7 +1,6 @@
 package core
 
 import (
-	"container/list"
 	"database/sql"
 	"log"
 	"sync"
@@ -13,22 +12,22 @@ import (
 )
 
 type Core struct {
-	databaseName          string
-	database              *sql.DB
-	lockTrancactions      *sync.Mutex
-	trancactions          map[string]*transaction
-	lockBaseConfiguration *sync.Mutex
-	baseConfiguration     map[string]*Configuration
-	lockFullConfiguration *sync.Mutex
-	fullConfiguration     map[string]*Configuration
-	lockUsers             *sync.RWMutex
-	users                 map[string]corebase.IUser
-	close                 bool
-	genUID                chan string
-	listenpulls           map[string]IListenPull
-	callpulls             map[string]ICallPull
+	databaseName     string
+	database         *sql.DB
+	lockTrancactions *sync.Mutex
+	trancactions     map[string]*transaction
+	configurator     *Configurator
+	lockUsers        *sync.RWMutex
+	users            map[string]corebase.IUser
+	close            bool
+	genUID           chan string
+	listenpulls      map[string]IListenPull
+	callpulls        map[string]ICallPull
 }
 
+func (c *Core) Configurator() *Configurator { return c.configurator }
+
+/*
 func (core *Core) GetConfiguration() map[string]*Configuration {
 	l := make(map[string]*Configuration, len(core.baseConfiguration))
 	for key, value := range core.baseConfiguration {
@@ -36,7 +35,6 @@ func (core *Core) GetConfiguration() map[string]*Configuration {
 	}
 	return l
 }
-
 func (core *Core) AddBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
 	core.lockBaseConfiguration.Lock()
 	defer core.lockBaseConfiguration.Unlock()
@@ -56,7 +54,7 @@ func (core *Core) addFullConfiguration(ConfigurationName string, conf *Configura
 	}
 	core.fullConfiguration[ConfigurationName] = conf
 	return true
-}
+}/**/
 
 func (core *Core) getUser(Login string) corebase.IUser {
 	core.lockUsers.RLock()
@@ -67,6 +65,8 @@ func (core *Core) getUser(Login string) corebase.IUser {
 	}
 	return nil
 }
+
+/*
 func (core *Core) loadBaseConfiguration(ConfigurationName string) *Configuration {
 	core.lockBaseConfiguration.Lock()
 	defer core.lockBaseConfiguration.Unlock()
@@ -152,23 +152,24 @@ func (core *Core) LoadConfiguration(ConfigurationName string, Access corebase.IA
 	core.addFullConfiguration(ConfigurationName, conf)
 	return conf, nil
 }
+*/
+func (core *Core) Congigurator() *Configurator {
+	return core.configurator
+}
 
 //getConfiguration
 func NewCore(DatabaseName string, ConnectionString string) (*Core, error) {
 	var err error
 	core := &Core{
-		databaseName:          DatabaseName,
-		genUID:                make(chan string),
-		lockTrancactions:      &sync.Mutex{},
-		trancactions:          make(map[string]*transaction),
-		lockBaseConfiguration: &sync.Mutex{},
-		baseConfiguration:     make(map[string]*Configuration),
-		lockFullConfiguration: &sync.Mutex{},
-		fullConfiguration:     make(map[string]*Configuration),
-		lockUsers:             &sync.RWMutex{},
-		close:                 false,
-		listenpulls:           map[string]IListenPull{},
-		callpulls:             map[string]ICallPull{},
+		databaseName:     DatabaseName,
+		genUID:           make(chan string),
+		lockTrancactions: &sync.Mutex{},
+		trancactions:     make(map[string]*transaction),
+		configurator:     NewConfigurator(),
+		lockUsers:        &sync.RWMutex{},
+		close:            false,
+		listenpulls:      map[string]IListenPull{},
+		callpulls:        map[string]ICallPull{},
 	}
 
 	async := callpull.NewCallPull()
@@ -264,7 +265,7 @@ func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time
 	var ok bool
 	var config *Configuration
 	var callinfo corebase.ICallInfo
-	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return nil, nil, nil, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {
@@ -285,7 +286,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	var ok bool
 	var config *Configuration
 	var callinfo corebase.ICallInfo
-	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
 	if callinfo, err = config.GetCallInfo(Name); err != nil {

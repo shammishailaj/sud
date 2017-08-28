@@ -8,7 +8,7 @@ import (
 )
 
 func stdConfigurationList(cr *Core, Name string, Param map[string]interface{}, timeOutWait time.Duration, Access corebase.IAccess) (callpull.Result, error) {
-	configurations := cr.GetConfiguration()
+	configurations := cr.Configurator().GetConfigurations()
 	listConf := make(map[string]interface{})
 	for name := range configurations {
 		var err error

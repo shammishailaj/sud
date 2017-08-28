@@ -56,7 +56,7 @@ func (core *Core) CheckConfiguration(TransactionUID string, ConfigurationName st
 	if tx, err = core.getTransaction(TransactionUID); err != nil {
 		return err
 	}
-	if config, err = core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return err
 	}
 	TablePoles := map[string]map[string]*PoleTableInfo{}

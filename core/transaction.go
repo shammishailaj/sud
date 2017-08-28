@@ -34,7 +34,7 @@ func (t *transaction) QueryRow(query string, args ...interface{}) *sql.Row {
 func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType string, poles []string, wheres []corebase.IRecordWhere, Access corebase.IAccess) (map[corebase.UUID]map[string]interface{}, error) {
 	var err error
 	var config *Configuration
-	if config, err = tx.core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = tx.core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return nil, err
 	}
 	var TypeInfo corebase.ITypeInfo
@@ -108,7 +108,7 @@ func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID coreba
 	}
 
 	var config *Configuration
-	if config, err = tx.core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = tx.core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return err
 	}
 	var TypeInfo corebase.ITypeInfo
@@ -174,7 +174,7 @@ func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID coreba
 func (tx *transaction) NewRecord(ConfigurationName string, RecordType string, Poles map[string]interface{}, Access corebase.IAccess) (corebase.UUID, error) {
 	var err error
 	var config *Configuration
-	if config, err = tx.core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = tx.core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return "", err
 	}
 	var TypeInfo corebase.ITypeInfo
@@ -201,7 +201,7 @@ func (tx *transaction) GetRecordAccess(ConfigurationName string, RecordUID coreb
 	}
 
 	var config *Configuration
-	if config, err = tx.core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = tx.core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return "", err
 	}
 	var TypeInfo corebase.ITypeInfo
@@ -231,7 +231,7 @@ func (tx *transaction) SetRecordAccess(ConfigurationName string, RecordUID coreb
 	}
 
 	var config *Configuration
-	if config, err = tx.core.LoadConfiguration(ConfigurationName, Access); err != nil {
+	if config, err = tx.core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return err
 	}
 	var TypeInfo corebase.ITypeInfo
