@@ -1,6 +1,16 @@
 {
     "map": {
-        "accessList": { "list": [{ "string": "std" }] },
+        "accessLoad": { "list": [{ "string": "std" }] },
+        "accessInfo": {
+            "map": {
+                "std": {
+                    "map": {
+                        "name": "std",
+                        "title": "Access for std library"
+                    }
+                }
+            }
+        },
         "callInfo": {
             "map": {
                 "std.Configuration.Get": {
@@ -10,12 +20,12 @@
                         "configurationName": { "string": "std" },
                         "name": { "string": "std.Configuration.Get" },
                         "pullName": { "string": "std" },
-                        "title": { "string": "Список конфигураций" }
+                        "title": { "string": "List of configuration" }
                     }
                 }
             }
         },
-        "dependConfigurationName": { "list": [] },
+        "dependConfigurationName": { "list": ["Configuration"] },
         "polesInfo": { "map": {} },
         "typeInfo": { "map": {} }
     }

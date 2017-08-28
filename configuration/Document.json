@@ -1,6 +1,22 @@
 {
     "map": {
-        "accessList": { "list": [{ "string": "Document" }] },
+        "accessLoad": { "list": [{ "string": "Document" }] },
+        "accessInfo": {
+            "map": {
+                "DocumentReader": {
+                    "map": {
+                        "name": "DocumentReader",
+                        "title": "Access for read document"
+                    }
+                },
+                "DocumentEditor": {
+                    "map": {
+                        "name": "DocumentReader",
+                        "title": "Access for edit document"
+                    }
+                }
+            }
+        },
         "callInfo": { "map": {} },
         "dependConfigurationName": { "list": [] },
         "polesInfo": {

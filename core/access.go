@@ -4,6 +4,14 @@ import (
 	"github.com/crazyprograms/sud/corebase"
 )
 
+type AccessInfo struct {
+	Name  string
+	Title string
+}
+
+func (ai *AccessInfo) GetName() string  { return ai.Name }
+func (ai *AccessInfo) GetTitle() string { return ai.Title }
+
 type accessUnion struct {
 	Access []corebase.IAccess
 }

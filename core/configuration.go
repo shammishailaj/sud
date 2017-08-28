@@ -18,27 +18,28 @@ type Configuration struct {
 	polesInfo               map[string]map[string]corebase.IPoleInfo
 	typesInfo               map[string]corebase.ITypeInfo
 	callsInfo               map[string]corebase.ICallInfo
+	accessInfo              map[string]corebase.IAccessInfo
 	dependConfigurationName []string
-	accessList              []string
+	accessLoad              []string
 }
 
-func (conf *Configuration) AddAccess(Access string) {
-	for _, a := range conf.accessList {
+func (conf *Configuration) AddAccessLoad(Access string) {
+	for _, a := range conf.accessLoad {
 		if a == Access {
 			return
 		}
 	}
-	conf.accessList = append(conf.accessList, Access)
+	conf.accessLoad = append(conf.accessLoad, Access)
 }
 func (conf *Configuration) GetDependConfigurationName() []string {
 	return conf.dependConfigurationName
 }
-func (conf *Configuration) GetAccessList() []string {
-	return conf.accessList
+func (conf *Configuration) GetAccessLoad() []string {
+	return conf.accessLoad
 }
 
-func (conf *Configuration) CheckAccess(Access corebase.IAccess) bool {
-	for _, a := range conf.accessList {
+func (conf *Configuration) CheckAccessLoad(Access corebase.IAccess) bool {
+	for _, a := range conf.accessLoad {
 		if !Access.CheckAccess(a) {
 			return false
 		}
@@ -133,6 +134,9 @@ func (conf *Configuration) GetPolesInfo(RecordType string, Poles []string) map[s
 func (conf *Configuration) AddDependConfiguration(DependConfigurationName string) {
 	conf.dependConfigurationName = append(conf.dependConfigurationName, DependConfigurationName)
 }
+func (conf *Configuration) AddAccess(info AccessInfo) {
+	conf.accessInfo[info.Name] = &info
+}
 func (conf *Configuration) AddCall(info CallInfo) {
 	conf.callsInfo[info.Name] = &info
 }
@@ -173,19 +177,19 @@ func (conf *Configuration) AddPole(info PoleInfo) {
 		Title:             Title,
 	}
 }*/
-func NewConfiguration(AccessList []string) *Configuration {
+func NewConfiguration(AccessLoad []string) *Configuration {
 	return &Configuration{
 		polesInfo:               make(map[string]map[string]corebase.IPoleInfo),
 		typesInfo:               make(map[string]corebase.ITypeInfo),
 		callsInfo:               make(map[string]corebase.ICallInfo),
 		dependConfigurationName: []string{},
-		accessList:              AccessList,
+		accessLoad:              AccessLoad,
 	}
 }
 func (conf *Configuration) Save() (map[string]interface{}, error) {
 	confInfo := make(map[string]interface{})
 	structures.MapSetStringList(confInfo, "dependConfigurationName", conf.GetDependConfigurationName())
-	structures.MapSetStringList(confInfo, "accessList", conf.GetAccessList())
+	structures.MapSetStringList(confInfo, "accessLoad", conf.GetAccessLoad())
 	callsInfo := make(map[string]interface{})
 	for _, callName := range conf.GetCallNames() {
 		if info, err := conf.GetCallInfo(callName); err == nil {
@@ -251,9 +255,29 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 			conf.AddDependConfiguration(dconf)
 		}
 	}
-	if list, ok := structures.MapGetStringList(confInfo, "accessList"); ok {
+	if list, ok := structures.MapGetStringList(confInfo, "accessLoad"); ok {
 		for _, a := range list {
-			conf.AddAccess(a)
+			conf.AddAccessLoad(a)
+		}
+	}
+	if item, ok := confInfo["accessInfo"]; ok {
+		if accessInfo, ok := item.(map[string]interface{}); ok {
+			for accessName, info := range accessInfo {
+				if infoExt, ok := info.(map[string]interface{}); ok {
+					var ai AccessInfo
+					var nameOK, titleOK bool
+					ai.Name, nameOK = structures.MapGetString(infoExt, "name")
+					ai.Title, titleOK = structures.MapGetString(infoExt, "title")
+					if accessName != ai.Name {
+						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "accessName", Name: "conf stucture error"}
+					}
+					if nameOK && titleOK {
+						conf.AddAccess(ai)
+					} else {
+						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, name, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
+					}
+				}
+			}
 		}
 	}
 	if item, ok := confInfo["callInfo"]; ok {

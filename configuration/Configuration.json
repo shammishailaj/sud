@@ -1,7 +1,27 @@
 {
     "map": {
-        "accessList": { "list": [{ "string": "ConfigurationReader" }] },
-        "callInfo": { "map": {} },
+        "accessLoad": { "list": [{ "string": "ConfigurationReader" }] },
+        "accessInfo": {
+            "map": {
+                "ConfigurationReader": {
+                    "map": {
+                        "name": "ConfigurationReader",
+                        "title": "Access for read configuration"
+                    }
+                },
+                "ConfigurationEditor": {
+                    "map": {
+                        "name": "ConfigurationEditor",
+                        "title": "Access for edit configuration"
+                    }
+                }
+            }
+        },
+        "callInfo": {
+            "map": {
+
+            }
+        },
         "dependConfigurationName": { "list": [] },
         "polesInfo": {
             "map": {

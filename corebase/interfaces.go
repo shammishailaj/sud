@@ -41,7 +41,10 @@ type ICallInfo interface {
 	GetAccessCall() string
 	GetAccessListen() string
 }
-
+type IAccessInfo interface {
+	GetName() string
+	GetTitle() string
+}
 type IAccess interface {
 	CheckAccess(Access string) bool
 	Users() []IUser

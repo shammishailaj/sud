@@ -1,6 +1,22 @@
 {
     "map": {
-        "accessList": { "list": [{ "string": "Storage" }] },
+        "accessLoad": { "list": [{ "string": "Storage" }] },
+        "accessInfo": {
+            "map": {
+                "ConfigurationReader": {
+                    "map": {
+                        "name": "Storage",
+                        "title": "Access for rread/write storage"
+                    }
+                },
+                "StorageEngine": {
+                    "map": {
+                        "name": "StorageEngine",
+                        "title": "Access for storage engine"
+                    }
+                }
+            }
+        },
         "callInfo": {
             "map": {
                 "Storage.GetStream": {

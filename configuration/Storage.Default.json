@@ -1,6 +1,7 @@
 {
     "map": {
-        "accessList": { "list": [{ "string": "StorageEngine" }] },
+        "accessLoad": { "list": [{ "string": "StorageEngine" }] },
+        "accessInfo": { "map": {} },
         "callInfo": {
             "map": {
                 "Storage.Default.GetStream": {
