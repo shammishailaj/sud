@@ -5,12 +5,12 @@
             "map": {
                 "Storage": {
                     "map": {
-                        "title": "Access for rread/write storage"
+                        "title": { "string": "Access for rread/write storage" }
                     }
                 },
                 "StorageEngine": {
                     "map": {
-                        "title": "Access for storage engine"
+                        "title": { "string": "Access for storage engine" }
                     }
                 }
             }

@@ -5,7 +5,7 @@
             "map": {
                 "std": {
                     "map": {
-                        "title": "Access for std library"
+                        "title": { "string": "Access for std library" }
                     }
                 }
             }

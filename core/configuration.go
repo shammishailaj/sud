@@ -179,6 +179,7 @@ func (conf *Configuration) AddPole(info PoleInfo) {
 }*/
 func NewConfiguration(AccessLoad []string) *Configuration {
 	return &Configuration{
+		accessInfo:              make(map[string]corebase.IAccessInfo),
 		polesInfo:               make(map[string]map[string]corebase.IPoleInfo),
 		typesInfo:               make(map[string]corebase.ITypeInfo),
 		callsInfo:               make(map[string]corebase.ICallInfo),
@@ -277,7 +278,7 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					if titleOK {
 						conf.AddAccess(ai)
 					} else {
-						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, name, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
+						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "title", Name: "conf stucture error"}
 					}
 				}
 			}
@@ -304,7 +305,7 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					if configurationNameOK && pullNameOK && accessCallOK && accessListenOK && titleOK {
 						conf.AddCall(ci)
 					} else {
-						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, name, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
+						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
 					}
 				} else {
 					return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "callInfo", Name: "conf sutucture error"}
@@ -331,7 +332,7 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					if !recordTypeOK {
 						ti.RecordType = typeName
 					}
-					if configurationNameOK && recordTypeOK && accessTypeOK && accessNewOK && accessReadOK && accessSaveOK && titleOK {
+					if configurationNameOK && accessTypeOK && accessNewOK && accessReadOK && accessSaveOK && titleOK {
 						conf.AddType(ti)
 					} else {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, recordType, accessType, accessNew, accessRead, accessSave, title", Name: "conf stucture error"}

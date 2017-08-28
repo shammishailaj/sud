@@ -5,12 +5,12 @@
             "map": {
                 "DocumentReader": {
                     "map": {
-                        "title": "Access for read document"
+                        "title": { "string": "Access for read document" }
                     }
                 },
                 "DocumentEditor": {
                     "map": {
-                        "title": "Access for edit document"
+                        "title": { "string": "Access for edit document" }
                     }
                 }
             }

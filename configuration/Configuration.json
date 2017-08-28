@@ -5,12 +5,12 @@
             "map": {
                 "ConfigurationReader": {
                     "map": {
-                        "title": "Access for read configuration"
+                        "title": { "string": "Access for read configuration" }
                     }
                 },
                 "ConfigurationEditor": {
                     "map": {
-                        "title": "Access for edit configuration"
+                        "title": { "string": "Access for edit configuration" }
                     }
                 }
             }
