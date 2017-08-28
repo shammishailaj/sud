@@ -268,10 +268,13 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					var nameOK, titleOK bool
 					ai.Name, nameOK = structures.MapGetString(infoExt, "name")
 					ai.Title, titleOK = structures.MapGetString(infoExt, "title")
-					if accessName != ai.Name {
+					if nameOK && accessName != ai.Name {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "accessName", Name: "conf stucture error"}
 					}
-					if nameOK && titleOK {
+					if !nameOK {
+						ai.Name = accessName
+					}
+					if titleOK {
 						conf.AddAccess(ai)
 					} else {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, name, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
@@ -292,10 +295,13 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					ci.AccessCall, accessCallOK = structures.MapGetString(infoExt, "accessCall")
 					ci.AccessListen, accessListenOK = structures.MapGetString(infoExt, "accessListen")
 					ci.Title, titleOK = structures.MapGetString(infoExt, "title")
-					if callName != ci.Name {
+					if nameOK && callName != ci.Name {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "callName", Name: "conf stucture error"}
 					}
-					if configurationNameOK && nameOK && pullNameOK && accessCallOK && accessListenOK && titleOK {
+					if !nameOK {
+						ci.Name = callName
+					}
+					if configurationNameOK && pullNameOK && accessCallOK && accessListenOK && titleOK {
 						conf.AddCall(ci)
 					} else {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, name, pullName, accessCall, accessListen, title", Name: "conf stucture error"}
@@ -319,8 +325,11 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 					ti.AccessRead, accessReadOK = structures.MapGetString(infoExt, "accessRead")
 					ti.AccessSave, accessSaveOK = structures.MapGetString(infoExt, "accessSave")
 					ti.Title, titleOK = structures.MapGetString(infoExt, "title")
-					if typeName != ti.RecordType {
+					if recordTypeOK && typeName != ti.RecordType {
 						return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "typeName", Name: "conf stucture error"}
+					}
+					if !recordTypeOK {
+						ti.RecordType = typeName
 					}
 					if configurationNameOK && recordTypeOK && accessTypeOK && accessNewOK && accessReadOK && accessSaveOK && titleOK {
 						conf.AddType(ti)
@@ -362,10 +371,13 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 							if recordTypeName != pi.RecordType {
 								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "recordTypeName", Name: "conf stucture error"}
 							}
-							if poleName != pi.PoleName {
+							if poleNameOK && poleName != pi.PoleName {
 								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "poleName", Name: "conf stucture error"}
 							}
-							if configurationNameOK && poleNameOK && poleTypeOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
+							if !poleNameOK {
+								pi.PoleName = poleName
+							}
+							if configurationNameOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
 								conf.AddPole(pi)
 							} else {
 								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, poleName, poleType, recordType, indexType, default, checker, accessRead, accessWrite, title", Name: "conf stucture error"}

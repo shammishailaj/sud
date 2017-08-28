@@ -9,7 +9,6 @@
                         "accessCall": { "string": "Storage" },
                         "accessListen": { "string": "StorageEngine" },
                         "configurationName": { "string": "Storage.Default" },
-                        "name": { "string": "Storage.Default.GetStream" },
                         "pullName": { "string": "async" },
                         "title": { "string": "" }
                     }
@@ -19,7 +18,6 @@
                         "accessCall": { "string": "Storage" },
                         "accessListen": { "string": "StorageEngine" },
                         "configurationName": { "string": "Storage.Default" },
-                        "name": { "string": "Storage.Default.SetStream" },
                         "pullName": { "string": "async" },
                         "title": { "string": "" }
                     }

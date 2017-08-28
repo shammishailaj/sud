@@ -3,15 +3,13 @@
         "accessLoad": { "list": [{ "string": "Storage" }] },
         "accessInfo": {
             "map": {
-                "ConfigurationReader": {
+                "Storage": {
                     "map": {
-                        "name": "Storage",
                         "title": "Access for rread/write storage"
                     }
                 },
                 "StorageEngine": {
                     "map": {
-                        "name": "StorageEngine",
                         "title": "Access for storage engine"
                     }
                 }
@@ -24,7 +22,6 @@
                         "accessCall": { "string": "Storage" },
                         "accessListen": { "string": "" },
                         "configurationName": { "string": "Storage" },
-                        "name": { "string": "Storage.GetStream" },
                         "pullName": { "string": "std" },
                         "title": { "string": "Получить поток" }
                     }
@@ -34,7 +31,6 @@
                         "accessCall": { "string": "Storage" },
                         "accessListen": { "string": "" },
                         "configurationName": { "string": "Storage" },
-                        "name": { "string": "Storage.SetStream" },
                         "pullName": { "string": "std" },
                         "title": { "string": "Передать поток" }
                     }
@@ -54,7 +50,6 @@
                                 "configurationName": { "string": "Storage" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "Index" },
-                                "poleName": { "string": "Storage.Stream.Hash" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Storage.Stream" },
                                 "title": { "string": "Хеш потока" }
@@ -68,7 +63,6 @@
                                 "configurationName": { "string": "Storage" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Storage.Stream.Priority" },
                                 "poleType": { "string": "Int64Value" },
                                 "recordType": { "string": "Storage.Stream" },
                                 "title": { "string": "Приоритет" }
@@ -82,7 +76,6 @@
                                 "configurationName": { "string": "Storage" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Storage.Stream.Size" },
                                 "poleType": { "string": "Int64Value" },
                                 "recordType": { "string": "Storage.Stream" },
                                 "title": { "string": "Размер в байтах" }
@@ -96,7 +89,6 @@
                                 "configurationName": { "string": "Storage" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Storage.Stream.Storage" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Storage.Stream" },
                                 "title": { "string": "Имя хранилища в котором хранится" }
@@ -115,7 +107,6 @@
                         "accessSave": { "string": "StorageEngine" },
                         "accessType": { "string": "" },
                         "configurationName": { "string": "Storage" },
-                        "recordType": { "string": "Storage.Stream" },
                         "title": { "string": "Поток" }
                     }
                 }

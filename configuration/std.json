@@ -5,7 +5,6 @@
             "map": {
                 "std": {
                     "map": {
-                        "name": "std",
                         "title": "Access for std library"
                     }
                 }
@@ -18,7 +17,6 @@
                         "accessCall": { "string": "Configuration" },
                         "accessListen": { "string": "" },
                         "configurationName": { "string": "std" },
-                        "name": { "string": "std.Configuration.Get" },
                         "pullName": { "string": "std" },
                         "title": { "string": "List of configuration" }
                     }

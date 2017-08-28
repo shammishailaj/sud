@@ -5,13 +5,11 @@
             "map": {
                 "ConfigurationReader": {
                     "map": {
-                        "name": "ConfigurationReader",
                         "title": "Access for read configuration"
                     }
                 },
                 "ConfigurationEditor": {
                     "map": {
-                        "name": "ConfigurationEditor",
                         "title": "Access for edit configuration"
                     }
                 }
@@ -35,7 +33,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.Depend.ConfigurationName" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Ссылка на конфигурацию" }
@@ -49,7 +46,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "int": 100 },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.Depend.Prioritet" },
                                 "poleType": { "string": "Int64Value" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Приоритет зависимости чем больше значение тем выше приоритет. По умолчанию 100" }
@@ -63,7 +59,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.Name" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Имя конфигурации" }
@@ -77,7 +72,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.CheckerInt64ValueList" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Проверка Int список доступных значений" }
@@ -91,7 +85,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.CheckerInt64ValueMax" },
                                 "poleType": { "string": "Int64Value" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Проверка Int Max" }
@@ -105,7 +98,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.CheckerInt64ValueMin" },
                                 "poleType": { "string": "Int64Value" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Проверка Int Min" }
@@ -119,7 +111,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.CheckerStringValueAllowNull" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Может равнятся NULL" }
@@ -133,7 +124,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.CheckerStringValueList" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Проверка String список доступных значений" }
@@ -147,7 +137,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.Edit" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Доступ на редактирование" }
@@ -161,7 +150,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.IndexType" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Индекс поля" }
@@ -175,7 +163,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.New" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Доступ на создание" }
@@ -189,7 +176,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "None" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.PoleName" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Имя поля" }
@@ -203,7 +189,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.PoleType" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Тип поля" }
@@ -217,7 +202,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.PoleInfo.RecordType" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание поля. Тип документа" }
@@ -231,7 +215,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.RecordType.Name" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание типа документа. Имя типа" }
@@ -245,7 +228,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.RecordType.New" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание типа документа. Разрешено создание таких документов" }
@@ -259,7 +241,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.RecordType.Read" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание типа документа. Разрешено чтение таких документов" }
@@ -273,7 +254,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "string": "True" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.RecordType.Save" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание типа документа. Разрешено  сохранение таких документов" }
@@ -287,7 +267,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.Title" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Описание элемента" }
@@ -301,7 +280,6 @@
                                 "configurationName": { "string": "Configuration" },
                                 "default": { "null": "NULL" },
                                 "indexType": { "string": "None" },
-                                "poleName": { "string": "Configuration.Type" },
                                 "poleType": { "string": "StringValue" },
                                 "recordType": { "string": "Configuration" },
                                 "title": { "string": "Тип конфигурируемого элемента" }
@@ -320,7 +298,6 @@
                         "accessSave": { "string": "ConfigurationEditor" },
                         "accessType": { "string": "Free" },
                         "configurationName": { "string": "Configuration" },
-                        "recordType": { "string": "Configuration" },
                         "title": { "string": "Конфигурация" }
                     }
                 }
