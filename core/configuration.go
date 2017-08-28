@@ -377,7 +377,7 @@ func (conf *Configuration) Load(confInfo map[string]interface{}) error {
 							if !poleNameOK {
 								pi.PoleName = poleName
 							}
-							if configurationNameOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
+							if configurationNameOK && poleTypeOK && recordTypeOK && indexTypeOK && defaultOK && checkerOK && accessReadOK && accessWriteOK && titleOK {
 								conf.AddPole(pi)
 							} else {
 								return &corebase.Error{Action: "Configuration:Load", ErrorType: corebase.ErrorFormat, Info: "configurationName, poleName, poleType, recordType, indexType, default, checker, accessRead, accessWrite, title", Name: "conf stucture error"}
