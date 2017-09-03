@@ -3,6 +3,7 @@ package core
 import (
 	"container/list"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"sync"
@@ -32,16 +33,18 @@ func (cr *Configurator) loadConfigurations(configDir string) error {
 		if file.IsDir() {
 			cr.loadConfigurations(nf)
 		} else {
+			confName := n[0 : len(n)-len(path.Ext(n))]
+			log.Println("Load config", confName, nf)
 			var data []byte
 			if data, err = ioutil.ReadFile(nf); err != nil {
 				return err
 			}
-			confName := n[0 : len(n)-len(path.Ext(n))]
-			conf := NewConfiguration([]string{})
+
+			conf := NewConfiguration(confName, []string{})
 			if err = conf.LoadJson(data); err != nil {
 				return err
 			}
-			cr.AddBaseConfiguration(confName, conf)
+			cr.AddBaseConfiguration(conf)
 		}
 	}
 	return nil
@@ -59,6 +62,8 @@ func (cr *Configurator) SetConfigurationPath(configurationPath string) {
 	cr.configurationPath = configurationPath
 }
 func (cr *Configurator) ReloadConfiguration() error {
+	log.Println("Start ReloadConfiguration")
+	defer log.Println("End ReloadConfiguration")
 	cr.lockFullConfiguration.Lock()
 	defer cr.lockFullConfiguration.Unlock()
 	cr.lockBaseConfiguration.Lock()
@@ -76,15 +81,14 @@ func (cr *Configurator) GetConfigurations() map[string]*Configuration {
 	cr.lockBaseConfiguration.RUnlock()
 	return l
 }
-func (cr *Configurator) AddBaseConfiguration(ConfigurationName string, conf *Configuration) bool {
+func (cr *Configurator) AddBaseConfiguration(conf *Configuration) bool {
 	cr.lockBaseConfiguration.Lock()
-	_, ok := cr.baseConfiguration[ConfigurationName]
+	_, ok := cr.baseConfiguration[conf.Name()]
 	if !ok {
-		cr.baseConfiguration[ConfigurationName] = conf
+		cr.baseConfiguration[conf.Name()] = conf
 	}
-	return !ok
 	cr.lockBaseConfiguration.Unlock()
-	return true
+	return !ok
 }
 func (cr *Configurator) GetConfiguration(ConfigurationName string, Access corebase.IAccess) (*Configuration, error) {
 	var conf *Configuration
@@ -118,7 +122,7 @@ func (cr *Configurator) loadConfiguration(ConfigurationName string) (*Configurat
 			if lconf, ok = cr.baseConfiguration[ConfigurationName]; !ok {
 				return &corebase.Error{ErrorType: corebase.ErrorTypeNotFound, Action: "LoadConfiguration", Name: ConfigurationName}
 			}
-			for _, a := range lconf.GetAccessLoad() {
+			for _, a := range lconf.AccessLoad() {
 				AccessConfiguration[a] = true
 			}
 			loadConfiguration[ConfigurationName] = lconf
@@ -143,7 +147,7 @@ func (cr *Configurator) loadConfiguration(ConfigurationName string) (*Configurat
 		AccessList[ANum] = a
 		ANum++
 	}
-	conf = NewConfiguration(AccessList)
+	conf = NewConfiguration(ConfigurationName, AccessList)
 	for e := depend.Front(); e != nil; e = e.Next() {
 		c := e.Value.(*Configuration)
 		for RecordType, typeInfo := range c.typesInfo {

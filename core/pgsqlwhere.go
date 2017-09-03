@@ -18,7 +18,7 @@ func pwRecordWhereLimit(conf *Configuration, RecordType string, state *queryStat
 func pwRecordWhereOrder(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereOrder, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
+	if info, err = conf.PoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
@@ -34,7 +34,7 @@ func pwRecordWhereOrder(conf *Configuration, RecordType string, state *queryStat
 func pwRecordWhereContainPole(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereContainPole, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
+	if info, err = conf.PoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
@@ -48,7 +48,7 @@ func pwRecordWhereContainPole(conf *Configuration, RecordType string, state *que
 func pwRecordWhereNotContainPole(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereNotContainPole, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
+	if info, err = conf.PoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}
@@ -69,7 +69,7 @@ func pwRecordWhereNotContainPole(conf *Configuration, RecordType string, state *
 func pwRecordWhereCompare(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereCompare, tx *transaction) error {
 	var err error
 	var info corebase.IPoleInfo
-	if info, err = conf.GetPoleInfo(RecordType, w.PoleName); err != nil {
+	if info, err = conf.PoleInfo(RecordType, w.PoleName); err != nil {
 		return err
 	}
 	pti := PoleTableInfo{}

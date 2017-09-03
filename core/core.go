@@ -268,7 +268,7 @@ func (core *Core) Listen(ConfigurationName string, Name string, TimeoutWait time
 	if config, err = core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return nil, nil, nil, err
 	}
-	if callinfo, err = config.GetCallInfo(Name); err != nil {
+	if callinfo, err = config.CallInfo(Name); err != nil {
 		return nil, nil, nil, err
 	}
 	if !Access.CheckAccess(callinfo.GetAccessListen()) {
@@ -289,7 +289,7 @@ func (core *Core) Call(ConfigurationName string, Name string, Params map[string]
 	if config, err = core.configurator.GetConfiguration(ConfigurationName, Access); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
-	if callinfo, err = config.GetCallInfo(Name); err != nil {
+	if callinfo, err = config.CallInfo(Name); err != nil {
 		return callpull.Result{Result: nil}, err
 	}
 	if !Access.CheckAccess(callinfo.GetAccessCall()) {

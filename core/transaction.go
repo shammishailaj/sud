@@ -38,7 +38,7 @@ func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType stri
 		return nil, err
 	}
 	var TypeInfo corebase.ITypeInfo
-	if TypeInfo, err = config.GetTypeInfo(RecordType); err != nil {
+	if TypeInfo, err = config.TypeInfo(RecordType); err != nil {
 		return nil, err
 	}
 	FreeAccess := TypeInfo.GetAccessType() == "Free"
@@ -51,7 +51,7 @@ func (tx *transaction) GetRecordsPoles(ConfigurationName string, RecordType stri
 	state := NewQueryState()
 	state.AddPoleSQL(`"Record"."__RecordUID"`, &RecordUID)
 	state.AddPoleSQL(`"Record"."RecordAccess"`, &RecordAccess)
-	for poleName, pi := range config.GetPolesInfo(RecordType, poles) {
+	for poleName, pi := range config.PolesInfo(RecordType, poles) {
 		if Access.CheckAccess(pi.GetAccessRead()) {
 			state.AddPole(poleName, pi)
 		}
@@ -112,7 +112,7 @@ func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID coreba
 		return err
 	}
 	var TypeInfo corebase.ITypeInfo
-	if TypeInfo, err = config.GetTypeInfo(RecordType); err != nil {
+	if TypeInfo, err = config.TypeInfo(RecordType); err != nil {
 		return err
 	}
 	FreeAccess := TypeInfo.GetAccessType() == "Free"
@@ -127,7 +127,7 @@ func (tx *transaction) SetRecordPoles(ConfigurationName string, RecordUID coreba
 	TablePole := map[string][]*PoleTableInfo{}
 
 	for pole, value := range Poles {
-		if pi, err = config.GetPoleInfo(RecordType, pole); err != nil {
+		if pi, err = config.PoleInfo(RecordType, pole); err != nil {
 			return err
 		}
 		checker := pi.GetChecker()
@@ -178,7 +178,7 @@ func (tx *transaction) NewRecord(ConfigurationName string, RecordType string, Po
 		return "", err
 	}
 	var TypeInfo corebase.ITypeInfo
-	if TypeInfo, err = config.GetTypeInfo(RecordType); err != nil {
+	if TypeInfo, err = config.TypeInfo(RecordType); err != nil {
 		return "", err
 	}
 	if !Access.CheckAccess(TypeInfo.GetAccessNew()) {
@@ -205,7 +205,7 @@ func (tx *transaction) GetRecordAccess(ConfigurationName string, RecordUID coreb
 		return "", err
 	}
 	var TypeInfo corebase.ITypeInfo
-	if TypeInfo, err = config.GetTypeInfo(RecordType); err != nil {
+	if TypeInfo, err = config.TypeInfo(RecordType); err != nil {
 		return "", err
 	}
 	FreeAccess := TypeInfo.GetAccessType() == "Free"
@@ -235,7 +235,7 @@ func (tx *transaction) SetRecordAccess(ConfigurationName string, RecordUID coreb
 		return err
 	}
 	var TypeInfo corebase.ITypeInfo
-	if TypeInfo, err = config.GetTypeInfo(RecordType); err != nil {
+	if TypeInfo, err = config.TypeInfo(RecordType); err != nil {
 		return err
 	}
 	FreeAccess := TypeInfo.GetAccessType() == "Free"
