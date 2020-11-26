@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 func pwRecordWhereLimit(conf *Configuration, RecordType string, state *queryState, w *corebase.RecordWhereLimit, tx *transaction) error {

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 	uuid "github.com/satori/go.uuid"
 )
 

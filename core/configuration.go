@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 var baseConfiguration = map[string]*Configuration{}

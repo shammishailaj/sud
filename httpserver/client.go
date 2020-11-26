@@ -15,8 +15,8 @@ import (
 	"strings"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/client"
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/client"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 type Client struct {

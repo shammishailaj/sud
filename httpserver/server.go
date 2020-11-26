@@ -13,9 +13,9 @@ import (
 	"fmt"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/client"
-	"github.com/crazyprograms/sud/core"
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/client"
+	"github.com/shammishailaj/sud/core"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 type Session struct {

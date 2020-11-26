@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/core"
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/core"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 func testStd(cr *core.Core, Name string, Param map[string]interface{}, timeOutWait time.Duration) (callpull.Result, error) {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 type PoleCheckerStringValue struct {

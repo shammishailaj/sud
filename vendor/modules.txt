@@ -1,0 +1,18 @@
+# github.com/crazyprograms/callpull v0.0.0-20170205022203-a86c73cd99f7
+## explicit
+github.com/crazyprograms/callpull
+# github.com/lib/pq v1.8.0
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
+## explicit
+# github.com/satori/go.uuid v1.2.0
+## explicit
+github.com/satori/go.uuid
+# golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+## explicit
+golang.org/x/net/publicsuffix
+# gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
+## explicit

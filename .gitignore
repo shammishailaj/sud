@@ -47,3 +47,6 @@ Temporary Items
 .apdisk
 .vscode/launch.json
 debug
+
+.idea
+.idea/*

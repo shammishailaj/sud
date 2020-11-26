@@ -1,6 +1,6 @@
 package core
 
-import "github.com/crazyprograms/sud/corebase"
+import "github.com/shammishailaj/sud/corebase"
 
 type TypeInfo struct {
 	ConfigurationName string

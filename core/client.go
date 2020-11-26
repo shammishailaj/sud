@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/crazyprograms/callpull"
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 	_ "github.com/lib/pq"
 )
 

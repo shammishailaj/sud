@@ -5,12 +5,12 @@ import (
 
 	"fmt"
 
-	"github.com/crazyprograms/sud/client"
-	"github.com/crazyprograms/sud/core"
+	"github.com/shammishailaj/sud/client"
+	"github.com/shammishailaj/sud/core"
 
-	"github.com/crazyprograms/sud/httpserver"
-	"github.com/crazyprograms/sud/storage"
-	_ "github.com/crazyprograms/sud/test"
+	"github.com/shammishailaj/sud/httpserver"
+	"github.com/shammishailaj/sud/storage"
+	_ "github.com/shammishailaj/sud/test"
 )
 
 type d interface{}

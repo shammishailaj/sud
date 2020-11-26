@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/crazyprograms/sud/corebase"
+	"github.com/shammishailaj/sud/corebase"
 )
 
 type queryState struct {
